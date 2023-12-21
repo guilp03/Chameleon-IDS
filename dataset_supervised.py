@@ -6,6 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+import RandomForest as rf
 
 
 
@@ -42,24 +43,36 @@ df_train = df_train.reset_index(drop=True)
 df_val_test = df_val_test.reset_index(drop=True)
 
 x_train = df_train.drop('class', axis='columns')
-
+classes_train = df_train['class']
+y_train = classes_train.apply(lambda c: 0 if c == 'normal' else 1)
+#print(y_train)
 x_val, x_test, classes_val, classes_test = train_test_split(df_val_test.drop('class', axis='columns'), df_val_test['class'], test_size=0.65, stratify=df_val_test['class'], random_state=33)
 x_val, x_test = x_val.reset_index(drop=True), x_test.reset_index(drop=True)
 classes_val, classes_test =  classes_val.reset_index(drop=True), classes_test.reset_index(drop=True)
 
 y_val, y_test = classes_val.apply(lambda c: 0 if c == 'normal' else 1), classes_test.apply(lambda c: 0 if c == 'normal' else 1)
 
-del df_train, df_val_test
-
+del df_train, df_val_test  
+#print(x_train)
 #NORMALIZANDO DADOS
-
+#train
 std_scaler = StandardScaler()
-std_scaler = std_scaler.fit(x_train)
+colunas_numericas = x_train.select_dtypes(include=['number'])
+colunas_numericas_scaler = pd.DataFrame(std_scaler.fit_transform(colunas_numericas), columns=colunas_numericas.columns)
+x_train = colunas_numericas_scaler
+#print(x_train)
+#val
+colunas_numericas = x_val.select_dtypes(include=['number'])
+colunas_numericas_scaler = pd.DataFrame(std_scaler.fit_transform(colunas_numericas), columns=colunas_numericas.columns)
+x_val = colunas_numericas_scaler
+#test
+colunas_numericas = x_test.select_dtypes(include=['number'])
+colunas_numericas_scaler = pd.DataFrame(std_scaler.fit_transform(colunas_numericas), columns=colunas_numericas.columns)
+x_test = colunas_numericas_scaler
 
-norm_X_train = std_scaler.transform(x_train)
-norm_X_val = std_scaler.transform(x_val)
-norm_X_test = std_scaler.transform(x_test)
+rf_model = rf.RandomForest(42, x_train, y_train)
+f1_rf = rf.get_metrics(rf_model, x_val, y_val)
 
-del x_train, x_val, x_test
+print(f1_rf)
 
-#PROXIMAS AÇÕES: SEPARAR AS STRINGS PARA NORMALIZAR OS VALORES, TESTAR O DATASET NOS ALGORITMOS, TESTAR A JUNÇÃO COM O PSO
+#PROXIMAS AÇÕES: TESTAR O DATASET NOS ALGORITMOS, TESTAR A JUNÇÃO COM O PSO
