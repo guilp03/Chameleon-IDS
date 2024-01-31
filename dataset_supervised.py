@@ -3,10 +3,12 @@ import pandas as pd
 import os
 import re
 import seaborn as sns
+import random
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import RandomForest as rf
+import pso2 as pso
 
 
 
@@ -84,4 +86,40 @@ def conjuntos(df):
   
   return x_train, y_train, x_val, y_val
 
+columnsName1=[0,1]
+particles=[]
+for i in range(10):
+  part1=[]
+  for i in range(56):
+      item = random.choice(tuple(columnsName1))
+      part1.append(item)
+  particles.append(part1)
+  
+pb=[]
+pso.checkpersonalnest()
+
+  
+max(pb)
+ind = pb.index(max(pb))
+globalbest=particles[ind]
+for i in range(10):
+  particles2=[]
+  personal=[]
+  velocity=pso.checkvelocity(globalbest, particles)
+  particles2=pso.addingparticles(velocity, particles)
+  particles2=pso.inteiro(particles2)
+  personal=pso.checkpd(particles2, particles)
+  particles = particles2
+  globalbest=[]
+  max(pb)
+  ind = pb.index(max(pb))
+  globalbest=particles[ind]
+                
+    
+max(pb)
+
+ind = pb.index(max(pb))
+globalbest=particles[ind]
+
+print(pso.data(globalbest))
 #PROXIMAS AÇÕES: TESTAR O DATASET NOS ALGORITMOS, TESTAR A JUNÇÃO COM O PSO
