@@ -30,8 +30,6 @@ def remove_initial_and_ending_spaces(name):
         return name
 for col in df.columns:
     df= df.rename({col:remove_initial_and_ending_spaces(col)}, axis='columns')
-if 'class' not in df.columns:
-    print("Warning: 'class' column not found after renaming.")
 
  #O DATASET CONTÉM ASPAS SIMPLES NOS NOMES DAS COLUNAS, RETIRAR PARA SIMPLIFICAR A ESCRITA
 df.columns = df.columns.str.replace("'", "")
@@ -42,6 +40,7 @@ df.columns = df.columns.str.replace("'", "")
 
 initial_len = df.shape[0]
 df = df.dropna()
+print(df.columns)
 print(f'Tamanho inicial: {initial_len}, tamanho final {df.shape[0]} | Descartados {initial_len - df.shape[0]} registros com valores NA')
 #DIVISÃO DO CONJUNTO DE TREINO, VALIDAÇÃO E TESTE
 columnsName = df.drop(labels= 'class', axis= 1).columns.values.tolist()
@@ -52,12 +51,11 @@ def accuracy_calc(x):
   f1_rf = rf.get_metrics(rf_model, x_val, y_val)
   print('Accuracy:',f1_rf)
   return f1_rf
-
-def conjuntos(df):
-  print(df.columns)
+print(df)
+def conjuntos(dataf,x):
+  x = df[x]
   df_train = df.sample(frac = 0.6, random_state = 33)
   df_val_test = df.drop(df_train.index)
-  print(df_train.columns)
 
   df_train = df_train.reset_index(drop=True)
   df_val_test = df_val_test.reset_index(drop=True)
@@ -68,11 +66,9 @@ def conjuntos(df):
   x_val, x_test, classes_val, classes_test = train_test_split(df_val_test.drop('class', axis='columns'), df_val_test['class'], test_size=0.65, stratify=df_val_test['class'], random_state=33)
   x_val, x_test = x_val.reset_index(drop=True), x_test.reset_index(drop=True)
   classes_val, classes_test =  classes_val.reset_index(drop=True), classes_test.reset_index(drop=True)
-
   y_val, y_test = classes_val.apply(lambda c: 0 if c == 'normal' else 1), classes_test.apply(lambda c: 0 if c == 'normal' else 1)
 
   del df_train, df_val_test 
-  
   #print(x_train)
   #NORMALIZANDO DADOS
   #train
@@ -97,11 +93,11 @@ columnsName1=[0,1]
 particles=[]
 for i in range(10):
     part1=[]
-    for i in range(41):
+    for i in range(42):
         item = random.choice(tuple(columnsName1))
         part1.append(item)
-    part1.append(0)
     particles.append(part1)
+print(particles[0])
     
     
 def data(particles1):
@@ -109,6 +105,7 @@ def data(particles1):
     for i in range(len(particles1)):
         if particles1[i]!=1:
                 particles2.append(columnsName[i])
+    print(particles2)
     return particles2
 
 pb=[]
@@ -176,4 +173,4 @@ globalbest=particles[ind]
 
 print(data(globalbest))
 
-#FALTA CHECAR A ATUALIZAÇÃO DE VALORES DE PARTICLES
+#ESTOU ARRUMANDO A FUNÇÃO CONJUNTOS
