@@ -6,10 +6,8 @@ import warnings
 warnings.filterwarnings("ignore")
 import pandas as pd
 pd.set_option("display.max_columns", None)
-
 import re
 import seaborn as sns
-import random
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -40,35 +38,34 @@ df.columns = df.columns.str.replace("'", "")
 
 initial_len = df.shape[0]
 df = df.dropna()
-print(df.columns)
-print(f'Tamanho inicial: {initial_len}, tamanho final {df.shape[0]} | Descartados {initial_len - df.shape[0]} registros com valores NA')
+#print(f'Tamanho inicial: {initial_len}, tamanho final {df.shape[0]} | Descartados {initial_len - df.shape[0]} registros com valores NA')
 #DIVISÃO DO CONJUNTO DE TREINO, VALIDAÇÃO E TESTE
 columnsName = df.drop(labels= 'class', axis= 1).columns.values.tolist()
+y = df['class']
+y = y.apply(lambda c: 0 if c == 'normal' else 1)
+
 #FUNÇÃO QUE CALCULA O F1 DO RANDOM FOREST DADO UM CONJUNTO DE FEATURES
 def accuracy_calc(x):
-  x_train, y_train, x_val, y_val = conjuntos(df[x])
+  x_train, y_train, x_val, y_val, x_test, y_test = conjuntos(df[x])
   rf_model = rf.RandomForest(42, x_train, y_train)
   f1_rf = rf.get_metrics(rf_model, x_val, y_val)
   print('Accuracy:',f1_rf)
   return f1_rf
-print(df)
-def conjuntos(dataf,x):
-  x = df[x]
-  df_train = df.sample(frac = 0.6, random_state = 33)
-  df_val_test = df.drop(df_train.index)
+def conjuntos(x):
 
-  df_train = df_train.reset_index(drop=True)
-  df_val_test = df_val_test.reset_index(drop=True)
-  classes_train = df_train['class']
-  x_train = df_train.drop('class', axis='columns')
-  y_train = classes_train.apply(lambda c: 0 if c == 'normal' else 1)
+  x_train, x_val_test, y_train, y_val_test =  train_test_split(x, y, test_size=0.3, random_state=42, stratify=df['class'])
+
+
+  x_train = x_train.reset_index(drop=True)
+  x_val_test = x_val_test.reset_index(drop=True)
+  #y_train = classes_train.apply(lambda c: 0 if c == 'normal' else 1)
   #print(y_train)
-  x_val, x_test, classes_val, classes_test = train_test_split(df_val_test.drop('class', axis='columns'), df_val_test['class'], test_size=0.65, stratify=df_val_test['class'], random_state=33)
+  x_val, x_test, y_val, y_test = train_test_split(x_val_test, y_val_test, test_size=0.65, stratify=y_val_test, random_state=33)
   x_val, x_test = x_val.reset_index(drop=True), x_test.reset_index(drop=True)
-  classes_val, classes_test =  classes_val.reset_index(drop=True), classes_test.reset_index(drop=True)
-  y_val, y_test = classes_val.apply(lambda c: 0 if c == 'normal' else 1), classes_test.apply(lambda c: 0 if c == 'normal' else 1)
+  y_val, y_test =  y_val.reset_index(drop=True), y_test.reset_index(drop=True)
+  #y_val, y_test = classes_val.apply(lambda c: 0 if c == 'normal' else 1), classes_test.apply(lambda c: 0 if c == 'normal' else 1)
 
-  del df_train, df_val_test 
+  del x_val_test 
   #print(x_train)
   #NORMALIZANDO DADOS
   #train
@@ -86,7 +83,10 @@ def conjuntos(dataf,x):
   colunas_numericas_scaler = pd.DataFrame(std_scaler.fit_transform(colunas_numericas), columns=colunas_numericas.columns)
   x_test = colunas_numericas_scaler
   
-  return x_train, y_train, x_val, y_val
+  print(x_train.shape)
+  print(y_train.shape)
+  
+  return x_train, y_train, x_val, y_val, x_test, y_test
 
 
 columnsName1=[0,1]
@@ -97,7 +97,7 @@ for i in range(10):
         item = random.choice(tuple(columnsName1))
         part1.append(item)
     particles.append(part1)
-print(particles[0])
+#print(particles[0])
     
     
 def data(particles1):
@@ -105,7 +105,7 @@ def data(particles1):
     for i in range(len(particles1)):
         if particles1[i]!=1:
                 particles2.append(columnsName[i])
-    print(particles2)
+    #print(particles2)
     return particles2
 
 pb=[]
