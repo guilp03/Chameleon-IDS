@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import RandomForest as rf
+import XGBoost as gb
 
 # Função para remover espaços iniciais e finais
 def remove_initial_and_ending_spaces(name):
@@ -24,12 +25,19 @@ def remove_initial_and_ending_spaces(name):
         return name
     
 #FUNÇÃO QUE CALCULA O F1 DO RANDOM FOREST DADO UM CONJUNTO DE FEATURES
-def f1_score_calc(x):
+def f1_score_calc_rf(x):
   x_train, y_train, x_val, y_val, x_test, y_test = conjuntos(df[x])
   rf_model = rf.RandomForest(42, x_train, y_train)
   f1_rf, precision_rf, recall_rf = rf.get_metrics(rf_model, x_val, y_val)
   print('f1_score:',f1_rf, 'precision:', precision_rf, 'recall:', recall_rf)
   return f1_rf
+
+def f1_score_calc_gb(x):
+  x_train, y_train, x_val, y_val, x_test, y_test = conjuntos(df[x])
+  gb_model = gb.GradientBoost(x_train, y_train)
+  f1_gb, precision_gb, recall_gb = gb.get_metrics(gb_model, x_val, y_val)
+  print('f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb)
+  return f1_gb
 
 def conjuntos(x):
   
@@ -116,7 +124,7 @@ def particle_choices(particle):
 # Personal best array initialization
 pb=[]
 for i in range(len(particles)):
-    pb.append(f1_score_calc(particle_choices(particles[i])))
+    pb.append(f1_score_calc_rf(particle_choices(particles[i])))
 
 def checkvelocity(globalbest, particles, prev_velocity, inertia, prev_particles):
     inertia_array = np.array([inertia])
@@ -147,7 +155,7 @@ def inteiro(particles2):
 def update_pb(particles2, particles):
     personal=[]
     for i in range(len(particles2)):
-        personal.append(f1_score_calc(particle_choices(particles2[i])))
+        personal.append(f1_score_calc_rf(particle_choices(particles2[i])))
         #print(particles[i])
     for j in range(len(personal)):
         if(personal[j]>pb[j]):
