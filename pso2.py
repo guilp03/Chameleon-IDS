@@ -115,10 +115,11 @@ def checkpersonalnest(particles):
          print(particles[i])
 checkpersonalnest(particles)
 
-def checkvelocity(globalbest, particles):
+def checkvelocity(globalbest, particles, prev_velocity, inertia):
+    inertia_array = np.array([inertia])
     velocity=[]
     for j in range(len(particles)):
-        velocity.append(list(0+1*(np.random.random(1)[0])*(np.array(particles[j])-np.array(particles[j]))+1*(np.random.random(1)[0])*(np.array(globalbest)-np.array(particles[j]))))
+        velocity.append(list((prev_velocity[j] * inertia) + (np.random.random(1)[0]) * (np.array(particles[j]) - np.array(particles[j])) + (np.random.random(1)[0]) * (np.array(globalbest) - np.array(particles[j]))))
     #print(velocity)
     return velocity
 
@@ -134,6 +135,7 @@ def addingparticles(velocity, particles):
 def inteiro(particles2):
     for l in range(len(particles2)):
         for m in range(len(particles2[l])):
+            print(particles2[l][m])
             if particles2[l][m]>0.5:
                 particles2[l][m]=1
             else:
@@ -154,10 +156,13 @@ def checkpd(particles2, particles):
 max(pb)
 ind = pb.index(max(pb))
 globalbest=particles[ind]
-for i in range(10):
+velocity = [0] * 42
+itter = 10
+for i in range(itter):
+    inertia = 0.9 - ((0.5 / itter) * (i))
     particles2=[]
     personal=[]
-    velocity=checkvelocity(globalbest, particles)
+    velocity=checkvelocity(globalbest, particles, velocity, inertia)
     particles2=addingparticles(velocity, particles)
     particles2=inteiro(particles2)
     personal=checkpd(particles2, particles)
@@ -174,4 +179,4 @@ globalbest=particles[ind]
 print(data(globalbest))
 print(len(data(globalbest)))
 
-#ESTOU ARRUMANDO A FUNÇÃO CONJUNTOS
+#PSO FUNCIONA E A FÓRMULA FOI APRIMORADA, PRÓXIMO PASSO É AVALIAR E COMPARAR O RESULTADO OBTIDO NO PSO COM OS OBTIDOS QUANDO SE UTILIZA TODAS AS FEATURES
