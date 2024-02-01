@@ -112,14 +112,14 @@ pb=[]
 def checkpersonalnest(particles):
     for i in range(len(particles)):
          pb.append(accuracy_calc(data(particles[i])))
-         print(particles[i])
+         #print(particles[i])
 checkpersonalnest(particles)
 
-def checkvelocity(globalbest, particles, prev_velocity, inertia):
+def checkvelocity(globalbest, particles, prev_velocity, inertia, prev_particles):
     inertia_array = np.array([inertia])
     velocity=[]
     for j in range(len(particles)):
-        velocity.append(list((prev_velocity[j] * inertia) + (np.random.random(1)[0]) * (np.array(particles[j]) - np.array(particles[j])) + (np.random.random(1)[0]) * (np.array(globalbest) - np.array(particles[j]))))
+        velocity.append(list((prev_velocity[j] * inertia_array) + (np.random.random(1)[0]) * (np.array(particles[j]) - np.array(prev_particles[j])) + 2 * (np.random.random(1)[0]) * (np.array(globalbest) - np.array(particles[j]))))
     #print(velocity)
     return velocity
 
@@ -135,7 +135,6 @@ def addingparticles(velocity, particles):
 def inteiro(particles2):
     for l in range(len(particles2)):
         for m in range(len(particles2[l])):
-            print(particles2[l][m])
             if particles2[l][m]>0.5:
                 particles2[l][m]=1
             else:
@@ -146,7 +145,7 @@ def checkpd(particles2, particles):
     personal=[]
     for i in range(len(particles2)):
         personal.append(accuracy_calc(data(particles2[i])))
-        print(particles[i])
+        #print(particles[i])
     for j in range(len(personal)):
         if(personal[j]>pb[j]):
             particles[j]=particles2[j]
@@ -157,12 +156,13 @@ max(pb)
 ind = pb.index(max(pb))
 globalbest=particles[ind]
 velocity = [0] * 42
+particles2=[0] * 42
 itter = 10
 for i in range(itter):
-    inertia = 0.9 - ((0.5 / itter) * (i))
-    particles2=[]
+    #inertia = 0.9 - ((0.5 / itter) * (i))
+    inertia = 0.5
     personal=[]
-    velocity=checkvelocity(globalbest, particles, velocity, inertia)
+    velocity=checkvelocity(globalbest, particles, velocity, inertia, particles2)
     particles2=addingparticles(velocity, particles)
     particles2=inteiro(particles2)
     personal=checkpd(particles2, particles)
