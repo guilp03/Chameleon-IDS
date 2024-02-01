@@ -1,202 +1,183 @@
-# python implementation of particle swarm optimization (PSO)
-# minimizing rastrigin and sphere function
-
+from sklearn import preprocessing
+preprocessing.LabelEncoder()
 import random
-import math # cos() for Rastrigin
-import copy # array-copying convenience
-import sys	 # max float
-
-
-#-------fitness functions---------
-
-# rastrigin function
-def fitness_rastrigin(position):
-    fitnessVal = 0.0
-    for i in range(len(position)):
-        xi = position[i]
-        fitnessVal += (xi * xi) - (10 * math.cos(2 * math.pi * xi)) + 10
-    return fitnessVal
-
-#sphere function
-def fitness_sphere(position):
-	fitnessVal = 0.0
-	for i in range(len(position)):
-		xi = position[i]
-		fitnessVal += (xi*xi);
-	return fitnessVal;
-#-------------------------
-
-#particle class 
-class Particle:
-    def __init__(self, fitness, dim, minx, maxx, seed):
-        self.rnd = random.Random(seed)
-
-        # initialize position of the particle with 0.0 value
-        self.position = [0.0 for i in range(dim)]
-
-        # initialize velocity of the particle with 0.0 value
-        self.velocity = [0.0 for i in range(dim)]
-
-        # initialize best particle position of the particle with 0.0 value
-        self.best_part_pos = [0.0 for i in range(dim)]
-
-        # loop dim times to calculate random position and velocity
-        # range of position and velocity is [minx, max]
-        for i in range(dim):
-            self.position[i] = ((maxx - minx) *
-                self.rnd.random() + minx)
-            self.velocity[i] = ((maxx - minx) *
-                self.rnd.random() + minx)
-
-        # compute fitness of particle
-        self.fitness = fitness(self.position) # curr fitness
-
-        # initialize best position and fitness of this particle
-        self.best_part_pos = copy.copy(self.position) 
-        self.best_part_fitnessVal = self.fitness # best fitness
-
-# particle swarm optimization function
-def pso(fitness, max_iter, n, dim, minx, maxx):
-    # hyper parameters
-    w = 0.729 # inertia
-    c1 = 1.49445 # cognitive (particle)
-    c2 = 1.49445 # social (swarm)
-
-    rnd = random.Random(0)
-
-    # create n random particles
-    swarm = [Particle(fitness, dim, minx, maxx, i) for i in range(n)] 
-
-    # compute the value of best_position and best_fitness in swarm
-    best_swarm_pos = [0.0 for i in range(dim)]
-    best_swarm_fitnessVal = sys.float_info.max # swarm best
-
-    # computer best particle of swarm and it's fitness
-    for i in range(n): # check each particle
-        if swarm[i].fitness < best_swarm_fitnessVal:
-            best_swarm_fitnessVal = swarm[i].fitness
-            best_swarm_pos = copy.copy(swarm[i].position) 
-
-    # main loop of pso
-    Iter = 0
-    while Iter < max_iter:
-        
-        # after every 10 iterations 
-        # print iteration number and best fitness value so far
-        if Iter % 10 == 0 and Iter > 1:
-            print("Iter = " + str(Iter) + " best fitness = %.3f" % best_swarm_fitnessVal)
-
-        for i in range(n): # process each particle
-        
-        # compute new velocity of curr particle
-            for k in range(dim): 
-                r1 = rnd.random() # randomizations
-                r2 = rnd.random()
-            
-                swarm[i].velocity[k] = ( 
-                                        (w * swarm[i].velocity[k]) +
-                                        (c1 * r1 * (swarm[i].best_part_pos[k] - swarm[i].position[k])) +
-                                        (c2 * r2 * (best_swarm_pos[k] -swarm[i].position[k])) 
-                                    ) 
-
-
-                # if velocity[k] is not in [minx, max]
-                # then clip it 
-                if swarm[i].velocity[k] < minx:
-                    swarm[i].velocity[k] = minx
-                elif swarm[i].velocity[k] > maxx:
-                    swarm[i].velocity[k] = maxx
-
-
-        # compute new position using new velocity
-        for k in range(dim): 
-            swarm[i].position[k] += swarm[i].velocity[k]
-
-        # compute fitness of new position
-        swarm[i].fitness = fitness(swarm[i].position)
-
-        # is new position a new best for the particle?
-        if swarm[i].fitness < swarm[i].best_part_fitnessVal:
-            swarm[i].best_part_fitnessVal = swarm[i].fitness
-            swarm[i].best_part_pos = copy.copy(swarm[i].position)
-
-        # is new position a new best overall?
-        if swarm[i].fitness < best_swarm_fitnessVal:
-            best_swarm_fitnessVal = swarm[i].fitness
-            best_swarm_pos = copy.copy(swarm[i].position)
-        
-        # for-each particle
-        Iter += 1
-    #end_while
-    return best_swarm_pos
-    # end pso
-
-
-#----------------------------
-# Driver code for rastrigin function
-
-print("\nBegin particle swarm optimization on rastrigin function\n")
-dim = 3
-fitness = fitness_rastrigin
-
-
-print("Goal is to minimize Rastrigin's function in " + str(dim) + " variables")
-print("Function has known min = 0.0 at (", end="")
-for i in range(dim-1):
-    print("0, ", end="")
-print("0)")
-
-num_particles = 50
-max_iter = 100
-
-print("Setting num_particles = " + str(num_particles))
-print("Setting max_iter = " + str(max_iter))
-print("\nStarting PSO algorithm\n")
+import numpy as np
+import warnings
+warnings.filterwarnings("ignore")
+import pandas as pd
+pd.set_option("display.max_columns", None)
+import re
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+import XGBoost as gb
 
 
 
-best_position = pso(fitness, max_iter, num_particles, dim, -10.0, 10.0)
+df = pd.read_csv("csv_result-KDDTrain+_20Percent.csv")
+#print(df.info())
+# REMOVENDO ESPAÇOS NO FINAL E NO COMEÇO
+def remove_initial_and_ending_spaces(name):
+    regex = r'^(?:\s+)?(?P<gp>.+?)(?:\s+)?$'
+    mo = re.search(regex, name)
+    if mo is not None:
+        return mo['gp']
+    else:
+        print(f'Deu erro em: {name}')
+        return name
+for col in df.columns:
+    df= df.rename({col:remove_initial_and_ending_spaces(col)}, axis='columns')
 
-print("\nPSO completed\n")
-print("\nBest solution found:")
-print(["%.6f"%best_position[k] for k in range(dim)])
-fitnessVal = fitness(best_position)
-print("fitness of best solution = %.6f" % fitnessVal)
+ #O DATASET CONTÉM ASPAS SIMPLES NOS NOMES DAS COLUNAS, RETIRAR PARA SIMPLIFICAR A ESCRITA
+df.columns = df.columns.str.replace("'", "")
+ #VENDO A PROPORÇÃO BENIGNO X MALICIOSO
+#df['class_category'] = df['class'].apply(lambda label: 'Malicious' if label != 'normal' else 'Benign')
+#sns.countplot(data=df, x='class_category')
+#plt.show()
 
-print("\nEnd particle swarm for rastrigin function\n")
+initial_len = df.shape[0]
+df = df.dropna()
+#print(f'Tamanho inicial: {initial_len}, tamanho final {df.shape[0]} | Descartados {initial_len - df.shape[0]} registros com valores NA')
+#DIVISÃO DO CONJUNTO DE TREINO, VALIDAÇÃO E TESTE
+columnsName = df.drop(labels= 'class', axis= 1).columns.values.tolist()
+y = df['class']
+y = y.apply(lambda c: 0 if c == 'normal' else 1)
 
+#FUNÇÃO QUE CALCULA O F1 DO RANDOM FOREST DADO UM CONJUNTO DE FEATURES
+def accuracy_calc(x):
+  x_train, y_train, x_val, y_val, x_test, y_test = conjuntos(df[x])
+  gb_model = gb.GradientBoost(x_train, y_train)
+  f1_gb, precision_gb, recall_gb = gb.get_metrics(gb_model, x_val, y_val)
+  print('f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb)
+  return f1_gb
 
-print()
-print()
+def conjuntos(x):
 
-
-# Driver code for Sphere function 
-print("\nBegin particle swarm optimization on sphere function\n")
-dim = 3
-fitness = fitness_sphere
-
-
-print("Goal is to minimize sphere function in " + str(dim) + " variables")
-print("Function has known min = 0.0 at (", end="")
-for i in range(dim-1):
-    print("0, ", end="")
-print("0)")
-
-num_particles = 50
-max_iter = 100
-
-print("Setting num_particles = " + str(num_particles))
-print("Setting max_iter = " + str(max_iter))
-print("\nStarting PSO algorithm\n")
+  x_train, x_val_test, y_train, y_val_test =  train_test_split(x, y, test_size=0.3, random_state=42, stratify=df['class'])
 
 
+  x_train = x_train.reset_index(drop=True)
+  x_val_test = x_val_test.reset_index(drop=True)
+  #y_train = classes_train.apply(lambda c: 0 if c == 'normal' else 1)
+  #print(y_train)
+  x_val, x_test, y_val, y_test = train_test_split(x_val_test, y_val_test, test_size=0.65, stratify=y_val_test, random_state=33)
+  x_val, x_test = x_val.reset_index(drop=True), x_test.reset_index(drop=True)
+  y_val, y_test =  y_val.reset_index(drop=True), y_test.reset_index(drop=True)
+  #y_val, y_test = classes_val.apply(lambda c: 0 if c == 'normal' else 1), classes_test.apply(lambda c: 0 if c == 'normal' else 1)
 
-best_position = pso(fitness, max_iter, num_particles, dim, -10.0, 10.0)
+  del x_val_test 
+  #print(x_train)
+  #NORMALIZANDO DADOS
+  #train
+  std_scaler = StandardScaler()
+  colunas_numericas = x_train.select_dtypes(include=['number'])
+  colunas_numericas_scaler = pd.DataFrame(std_scaler.fit_transform(colunas_numericas), columns=colunas_numericas.columns)
+  x_train = colunas_numericas_scaler
+  #print(x_train)
+  #val
+  colunas_numericas = x_val.select_dtypes(include=['number'])
+  colunas_numericas_scaler = pd.DataFrame(std_scaler.fit_transform(colunas_numericas), columns=colunas_numericas.columns)
+  x_val = colunas_numericas_scaler
+  #test
+  colunas_numericas = x_test.select_dtypes(include=['number'])
+  colunas_numericas_scaler = pd.DataFrame(std_scaler.fit_transform(colunas_numericas), columns=colunas_numericas.columns)
+  x_test = colunas_numericas_scaler
+  
+  #print(x_train.shape)
+  #print(y_train.shape)
+  
+  return x_train, y_train, x_val, y_val, x_test, y_test
 
-print("\nPSO completed\n")
-print("\nBest solution found:")
-print(["%.6f"%best_position[k] for k in range(dim)])
-fitnessVal = fitness(best_position)
-print("fitness of best solution = %.6f" % fitnessVal)
 
-print("\nEnd particle swarm for sphere function\n")
+columnsName1=[0,1]
+particles=[]
+for i in range(20):
+    part1=[]
+    for i in range(42):
+        item = random.choice(tuple(columnsName1))
+        part1.append(item)
+    particles.append(part1)
+#print(particles[0])
+    
+    
+def data(particles1):
+    particles2=[]
+    for i in range(len(particles1)):
+        if particles1[i]!=1:
+                particles2.append(columnsName[i])
+    #print(particles2)
+    return particles2
+
+pb=[]
+def checkpersonalnest(particles):
+    for i in range(len(particles)):
+         pb.append(accuracy_calc(data(particles[i])))
+         #print(particles[i])
+checkpersonalnest(particles)
+
+def checkvelocity(globalbest, particles, prev_velocity, inertia, prev_particles):
+    inertia_array = np.array([inertia])
+    velocity=[]
+    for j in range(len(particles)):
+        velocity.append(list((prev_velocity[j] * inertia_array) + (np.random.random(1)[0]) * (np.array(particles[j]) - np.array(prev_particles[j])) + 2 * (np.random.random(1)[0]) * (np.array(globalbest) - np.array(particles[j]))))
+    #print(velocity)
+    return velocity
+
+def addingparticles(velocity, particles):
+    particles2=[]
+    for i in range(len(velocity)):
+        nextparticle=[]
+        for j in range(len(velocity[i])):
+            nextparticle.append(particles[i][j]+velocity[i][j])
+        particles2.append(nextparticle)
+    return particles2
+
+def inteiro(particles2):
+    for l in range(len(particles2)):
+        for m in range(len(particles2[l])):
+            if particles2[l][m]>0.5:
+                particles2[l][m]=1
+            else:
+                particles2[l][m]=0
+    return particles2
+
+def checkpd(particles2, particles):
+    personal=[]
+    for i in range(len(particles2)):
+        personal.append(accuracy_calc(data(particles2[i])))
+        #print(particles[i])
+    for j in range(len(personal)):
+        if(personal[j]>pb[j]):
+            particles[j]=particles2[j]
+            pb[j]=personal[j]
+    return personal
+
+max(pb)
+ind = pb.index(max(pb))
+globalbest=particles[ind]
+velocity = [0] * 42
+particles2=[0] * 42
+itter = 10
+for i in range(itter):
+    #inertia = 0.9 - ((0.5 / itter) * (i))
+    inertia = 0.5
+    personal=[]
+    velocity=checkvelocity(globalbest, particles, velocity, inertia, particles2)
+    particles2=addingparticles(velocity, particles)
+    particles2=inteiro(particles2)
+    personal=checkpd(particles2, particles)
+    particles = particles2
+    globalbest=[]
+    ind = pb.index(max(pb))
+    globalbest=particles[ind]
+                
+    
+
+ind = pb.index(max(pb))
+globalbest=particles[ind]
+
+print(data(globalbest))
+print(len(data(globalbest)))
+
+#PSO FUNCIONA E A FÓRMULA FOI APRIMORADA, PRÓXIMO PASSO É AVALIAR E COMPARAR O RESULTADO OBTIDO NO PSO COM OS OBTIDOS QUANDO SE UTILIZA TODAS AS FEATURES
