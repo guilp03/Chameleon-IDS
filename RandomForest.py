@@ -1,5 +1,5 @@
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import f1_score
+from sklearn.metrics import precision_score, recall_score, f1_score
 from math import sqrt
 
 def RandomForest(n_features, conjunto, labels):
@@ -9,5 +9,7 @@ def RandomForest(n_features, conjunto, labels):
 
 def get_metrics(model, validation, labels):
     preds = model.predict(validation)
+    precision = precision_score(labels, preds)
     f1 = f1_score(labels,preds)
-    return f1
+    recall = recall_score(labels, preds)
+    return f1, precision, recall

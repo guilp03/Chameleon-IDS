@@ -48,8 +48,8 @@ y = y.apply(lambda c: 0 if c == 'normal' else 1)
 def accuracy_calc(x):
   x_train, y_train, x_val, y_val, x_test, y_test = conjuntos(df[x])
   rf_model = rf.RandomForest(42, x_train, y_train)
-  f1_rf = rf.get_metrics(rf_model, x_val, y_val)
-  print('Accuracy:',f1_rf)
+  f1_rf, precision_rf, recall_rf = rf.get_metrics(rf_model, x_val, y_val)
+  print('f1_score:',f1_rf, 'precision:', precision_rf, 'recall:', recall_rf)
   return f1_rf
 def conjuntos(x):
 
@@ -83,15 +83,15 @@ def conjuntos(x):
   colunas_numericas_scaler = pd.DataFrame(std_scaler.fit_transform(colunas_numericas), columns=colunas_numericas.columns)
   x_test = colunas_numericas_scaler
   
-  print(x_train.shape)
-  print(y_train.shape)
+  #print(x_train.shape)
+  #print(y_train.shape)
   
   return x_train, y_train, x_val, y_val, x_test, y_test
 
 
 columnsName1=[0,1]
 particles=[]
-for i in range(10):
+for i in range(20):
     part1=[]
     for i in range(42):
         item = random.choice(tuple(columnsName1))
@@ -112,6 +112,7 @@ pb=[]
 def checkpersonalnest(particles):
     for i in range(len(particles)):
          pb.append(accuracy_calc(data(particles[i])))
+         print(particles[i])
 checkpersonalnest(particles)
 
 def checkvelocity(globalbest, particles):
@@ -143,6 +144,7 @@ def checkpd(particles2, particles):
     personal=[]
     for i in range(len(particles2)):
         personal.append(accuracy_calc(data(particles2[i])))
+        print(particles[i])
     for j in range(len(personal)):
         if(personal[j]>pb[j]):
             particles[j]=particles2[j]
@@ -161,16 +163,15 @@ for i in range(10):
     personal=checkpd(particles2, particles)
     particles = particles2
     globalbest=[]
-    max(pb)
     ind = pb.index(max(pb))
     globalbest=particles[ind]
                 
     
-max(pb)
 
 ind = pb.index(max(pb))
 globalbest=particles[ind]
 
 print(data(globalbest))
+print(len(data(globalbest)))
 
 #ESTOU ARRUMANDO A FUNÇÃO CONJUNTOS
