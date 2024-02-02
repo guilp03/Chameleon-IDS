@@ -14,6 +14,9 @@ from sklearn.preprocessing import StandardScaler
 import RandomForest as rf
 import XGBoost as gb
 
+# Definindo seed de aleatoriedade
+random.seed(10)
+
 # Função para remover espaços iniciais e finais
 def remove_initial_and_ending_spaces(name):
     regex = r'^(?:\s+)?(?P<gp>.+?)(?:\s+)?$'
