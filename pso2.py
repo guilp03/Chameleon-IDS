@@ -50,38 +50,6 @@ def f1_score_calc_gb(particle_choices, x_train, y_train, x_val, y_val, x_test, y
     print('f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb)
     return f1_gb
 
-def conjuntos(x, y):
-  # Dividindo a database em % para treinamento e % para validacao e testes
-  x_train, x_val_test, y_train, y_val_test =  train_test_split(x, y, test_size=0.3, random_state=42, stratify=df['class'])
-
-  # Reset dos índices dos subsets
-  x_train = x_train.reset_index(drop=True)
-  x_val_test = x_val_test.reset_index(drop=True)
-
-  #y_train = classes_train.apply(lambda c: 0 if c == 'normal' else 1)
-  #print(y_train)
-
-  # Dividindo o subset de validação + teste em subset de validação e subset de testes
-  x_val, x_test, y_val, y_test = train_test_split(x_val_test, y_val_test, test_size=0.65, stratify=y_val_test, random_state=33)
-  
-  # Reset dos índices dos subsets
-  x_val, x_test = x_val.reset_index(drop=True), x_test.reset_index(drop=True)
-  y_val, y_test =  y_val.reset_index(drop=True), y_test.reset_index(drop=True)
-  #y_val, y_test = classes_val.apply(lambda c: 0 if c == 'normal' else 1), classes_test.apply(lambda c: 0 if c == 'normal' else 1)
-
-  del x_val_test
-  #print(x_train)
-
-  # NORMALIZANDO DADOS
-  #train
-  x_train = normalize_data(x_train)
-  #val
-  x_val = normalize_data(x_val)
-  #test
-  x_test = normalize_data(x_test)
-
-  return x_train, y_train, x_val, y_val, x_test, y_test
-
 def normalize_data(subset):
     std_scaler = StandardScaler()
     colunas_numericas = subset.select_dtypes(include=['number'])
