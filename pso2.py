@@ -91,33 +91,28 @@ def normalize_data(subset):
 
 # MAIN
 df = pd.read_csv("csv_result-KDDTrain+_20Percent.csv")
-#print(df.info())
 for col in df.columns:
     df= df.rename({col:remove_initial_and_ending_spaces(col)}, axis='columns')
 
 # O DATASET CONTÉM ASPAS SIMPLES NOS NOMES DAS COLUNAS, RETIRAR PARA SIMPLIFICAR A ESCRITA
 df.columns = df.columns.str.replace("'", "")
 
-# VENDO A PROPORÇÃO BENIGNO X MALICIOSO
-#df['class_category'] = df['class'].apply(lambda label: 'Malicious' if label != 'normal' else 'Benign')
-#sns.countplot(data=df, x='class_category')
-#plt.show()
-
 initial_len = df.shape[0]
 df = df.dropna()
-#print(f'Tamanho inicial: {initial_len}, tamanho final {df.shape[0]} | Descartados {initial_len - df.shape[0]} registros com valores NA')
-#DIVISÃO DO CONJUNTO DE TREINO, VALIDAÇÃO E TESTE
+
+# Separando labels
 columnsName = df.drop(labels= 'class', axis= 1).columns.values.tolist()
 y = df['class']
 y = y.apply(lambda c: 0 if c == 'normal' else 1)
-# Transformando tipos categóricos em numéricos pois Random Forest não trabalha com valores categóricos
+
+# Transformando tipos categóricos em numéricos (Random Forest não trabalha com valores categóricos)
 df_not_numeric = df.select_dtypes(exclude=[np.number])
 not_numeric_columns = df_not_numeric.columns
 encoder = LabelEncoder()
 for column in not_numeric_columns:
     df[column] = encoder.fit_transform(df[column])
 
-print(df.info())
+# Divisão do conjunto de treino validação e teste
 x_train, y_train, x_val, y_val, x_test, y_test = conjuntos(df[columnsName], y)
 
 # Gerando 20 partículas da forma [0 0 1 0 ... 0 1] de tamanho 42 (número de features da database)
