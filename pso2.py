@@ -13,6 +13,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import RandomForest as rf
 import XGBoost as gb
+from sklearn.preprocessing import LabelEncoder
+
 
 # Definindo seed de aleatoriedade
 random.seed(10)
@@ -28,12 +30,15 @@ def remove_initial_and_ending_spaces(name):
         return name
     
 #FUNÇÃO QUE CALCULA O F1 DO RANDOM FOREST DADO UM CONJUNTO DE FEATURES
-def f1_score_calc_rf(x):
-  x_train, y_train, x_val, y_val, x_test, y_test = conjuntos(df[x])
-  rf_model = rf.RandomForest(42, x_train, y_train)
-  f1_rf, precision_rf, recall_rf = rf.get_metrics(rf_model, x_val, y_val)
-  print('f1_score:',f1_rf, 'precision:', precision_rf, 'recall:', recall_rf)
-  return f1_rf
+def f1_score_calc_rf(particle_choices, x_train, y_train, x_val, y_val, x_test, y_test):
+    # Selecionar as colunas apropriadas
+    x_train_selected = x_train[particle_choices]
+    x_val_selected = x_val[particle_choices]
+    x_test_selected = x_test[particle_choices]
+    rf_model = rf.RandomForest(42, x_train_selected, y_train)
+    f1_rf, precision_rf, recall_rf = rf.get_metrics(rf_model, x_val_selected, y_val)
+    print('f1_score:',f1_rf, 'precision:', precision_rf, 'recall:', recall_rf)
+    return f1_rf
 
 def f1_score_calc_gb(x):
   x_train, y_train, x_val, y_val, x_test, y_test = conjuntos(df[x])
@@ -42,8 +47,7 @@ def f1_score_calc_gb(x):
   print('f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb)
   return f1_gb
 
-def conjuntos(x):
-  
+def conjuntos(x, y):
   # Dividindo a database em % para treinamento e % para validacao e testes
   x_train, x_val_test, y_train, y_val_test =  train_test_split(x, y, test_size=0.3, random_state=42, stratify=df['class'])
 
@@ -64,7 +68,7 @@ def conjuntos(x):
 
   del x_val_test
   #print(x_train)
-  
+
   # NORMALIZANDO DADOS
   #train
   x_train = normalize_data(x_train)
@@ -103,6 +107,15 @@ df = df.dropna()
 columnsName = df.drop(labels= 'class', axis= 1).columns.values.tolist()
 y = df['class']
 y = y.apply(lambda c: 0 if c == 'normal' else 1)
+# Transformando tipos categóricos em numéricos pois Random Forest não trabalha com valores categóricos
+df_not_numeric = df.select_dtypes(exclude=[np.number])
+not_numeric_columns = df_not_numeric.columns
+encoder = LabelEncoder()
+for column in not_numeric_columns:
+    df[column] = encoder.fit_transform(df[column])
+
+print(df.info())
+x_train, y_train, x_val, y_val, x_test, y_test = conjuntos(df[columnsName], y)
 
 # Gerando 20 partículas da forma [0 0 1 0 ... 0 1] de tamanho 42 (número de features da database)
 columnsName1=[0,1]
@@ -117,17 +130,18 @@ for i in range(20):
     
 # Retorna as colunas escolhidas da partícula
 def particle_choices(particle):
-    particle_collumns=[]
+    particle_columns=[]
     for i in range(len(particle)):
         if particle[i]!=1:
-                particle_collumns.append(columnsName[i])
+                particle_columns.append(columnsName[i])
     #print(particle_choice)
-    return particle_collumns
+    return particle_columns
 
 # Personal best array initialization
 pb=[]
 for i in range(len(particles)):
-    pb.append(f1_score_calc_rf(particle_choices(particles[i])))
+    chosen_columns = particle_choices(particles[i])
+    pb.append(f1_score_calc_rf(chosen_columns, x_train, y_train, x_val, y_val, x_test, y_test))
 
 def checkvelocity(globalbest, particles, prev_velocity, inertia, prev_particles):
     inertia_array = np.array([inertia])
@@ -158,7 +172,7 @@ def inteiro(particles2):
 def update_pb(particles2, particles):
     personal=[]
     for i in range(len(particles2)):
-        personal.append(f1_score_calc_rf(particle_choices(particles2[i])))
+        personal.append(f1_score_calc_rf(particle_choices(particles2[i]), x_train, y_train, x_val, y_val, x_test, y_test))
         #print(particles[i])
     for j in range(len(personal)):
         if(personal[j]>pb[j]):
