@@ -106,7 +106,7 @@ x_test = normalize_data(x_test)
 # Gerando 20 partículas da forma [0 0 1 0 ... 0 1] de tamanho 42 (número de features da database)
 columnsName1=[0,1]
 particles=[] # Array de partículas
-for i in range(20):
+for i in range(15):
     part1=[]
     for i in range(42):
         item = random.choice(tuple(columnsName1))
@@ -171,7 +171,7 @@ ind = pb.index(max(pb))
 globalbest=particles[ind]
 velocity = [0] * 42
 particles2=[0] * 42 # Novo valor de particles depois da iteração
-itter = 10
+itter = 30
 for i in range(itter):
     #inertia = 0.9 - ((0.5 / itter) * (i))
     inertia = 0.5
