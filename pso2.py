@@ -40,12 +40,15 @@ def f1_score_calc_rf(particle_choices, x_train, y_train, x_val, y_val, x_test, y
     print('f1_score:',f1_rf, 'precision:', precision_rf, 'recall:', recall_rf)
     return f1_rf
 
-def f1_score_calc_gb(x):
-  x_train, y_train, x_val, y_val, x_test, y_test = conjuntos(df[x])
-  gb_model = gb.GradientBoost(x_train, y_train)
-  f1_gb, precision_gb, recall_gb = gb.get_metrics(gb_model, x_val, y_val)
-  print('f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb)
-  return f1_gb
+def f1_score_calc_gb(particle_choices, x_train, y_train, x_val, y_val, x_test, y_test):
+    # Selecionar as colunas apropriadas
+    x_train_selected = x_train[particle_choices]
+    x_val_selected = x_val[particle_choices]
+    x_test_selected = x_test[particle_choices]
+    gb_model = gb.GradientBoost(x_train_selected, y_train)
+    f1_gb, precision_gb, recall_gb = gb.get_metrics(gb_model, x_val_selected, y_val)
+    print('f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb)
+    return f1_gb
 
 def conjuntos(x, y):
   # Dividindo a database em % para treinamento e % para validacao e testes
