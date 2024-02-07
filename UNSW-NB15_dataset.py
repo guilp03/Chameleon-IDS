@@ -40,3 +40,12 @@ df['ct_flw_http_mthd'] = df['ct_flw_http_mthd'].fillna(-1) # Só ocorre se foi r
 df['is_ftp_login'] = df['is_ftp_login'].fillna(-1) # Só ocorre se foi requisição ftp
 
 # Não há colunas com valores infinitos.
+
+# Transformando tipos categóricos em numéricos (Random Forest não trabalha com valores categóricos)
+df_not_numeric = df.select_dtypes(exclude=[np.number])
+not_numeric_columns = df_not_numeric.columns
+encoder = LabelEncoder()
+for column in not_numeric_columns:
+    # Garantindo que todos os valores da coluna sejam do tipo string
+    df[column] = df[column].astype(str)
+    df[column] = encoder.fit_transform(df[column])
