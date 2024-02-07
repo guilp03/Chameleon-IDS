@@ -160,6 +160,7 @@ velocity = [0] * 42
 particles2=[0] * 42
 itter = 10
 for i in range(itter):
+    print("iteração", i)
     #inertia = 0.9 - ((0.5 / itter) * (i))
     inertia = 0.5
     personal=[]
@@ -171,7 +172,6 @@ for i in range(itter):
     globalbest=[]
     ind = pb.index(max(pb))
     globalbest=particles[ind]
-                
     
 
 ind = pb.index(max(pb))
