@@ -84,6 +84,8 @@ encoder = LabelEncoder()
 for column in not_numeric_columns:
     df[column] = encoder.fit_transform(df[column])
 
+normalize_data(df)
+
 # Divisão do conjunto de treino validação e teste
 # Dividindo a database em % para treinamento e % para validacao e testes
 x_train, x_val_test, y_train, y_val_test =  train_test_split(df[columnsName], y, test_size=0.3, random_state=42, stratify=df['class'])
@@ -100,11 +102,6 @@ x_val, x_test = x_val.reset_index(drop=True), x_test.reset_index(drop=True)
 y_val, y_test =  y_val.reset_index(drop=True), y_test.reset_index(drop=True)
 
 del x_val_test
-
-# Normalizando dados
-x_train = normalize_data(x_train)
-x_val = normalize_data(x_val)
-x_test = normalize_data(x_test)
 
 # PSO
 # Gerando 20 partículas da forma [0 0 1 0 ... 0 1] de tamanho 42 (número de features da database)
