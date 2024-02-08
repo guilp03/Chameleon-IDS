@@ -3,7 +3,6 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-import pso2
 from pso2 import f1_score_calc_rf,f1_score_calc_gb
 import random
 from joblib import Parallel, delayed

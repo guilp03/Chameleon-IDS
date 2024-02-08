@@ -59,7 +59,8 @@ def normalize_data(subset):
     return subset
 
 # TRATANDO O DATASET
-df = pd.read_csv("csv_result-KDDTrain+_20Percent.csv")
+#df = pd.read_csv("csv_result-KDDTrain+_20Percent.csv")
+df = pd.read_csv("KDDTrain+.csv")
 for col in df.columns:
     df= df.rename({col:remove_initial_and_ending_spaces(col)}, axis='columns')
 
