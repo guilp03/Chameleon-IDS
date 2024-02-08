@@ -107,7 +107,7 @@ x_test = normalize_data(x_test)
 # PSO
 # Gerando 20 partículas da forma [0 0 1 0 ... 0 1] de tamanho 42 (número de features da database)
 columnsName1=[0,1]
-funct = "rf"
+funct = "gb"
 particles=[] # Array de partículas
 for i in range(15):
     part1=[]
@@ -227,6 +227,7 @@ for i in range(itter):
     ind = pb.index(max(pb))
     globalbest=particles[ind]
     print(particles[ind])
+    print("Iteração:", i)
                 
 end_time = time.time()
 
@@ -237,6 +238,7 @@ print(particle_choices(globalbest))
 print(len(particle_choices(globalbest)))
 execution_time = end_time - start_time
 mins = execution_time // 60
+hours = mins // 60
 segs = execution_time % 60
-print("Tempo de execução:", mins, "minutos e", segs,"segundos")
+print("Tempo de execução:", hours, "horas,", mins, "minutos e", segs,"segundos")
 #PSO FUNCIONA E A FÓRMULA FOI APRIMORADA, PRÓXIMO PASSO É AVALIAR E COMPARAR O RESULTADO OBTIDO NO PSO COM OS OBTIDOS QUANDO SE UTILIZA TODAS AS FEATURES
