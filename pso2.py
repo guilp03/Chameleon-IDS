@@ -16,6 +16,8 @@ import XGBoost as gb
 from sklearn.preprocessing import LabelEncoder
 from joblib import Parallel, delayed
 import time
+import funct
+import Autoencoder as ae
 
 
 # Definindo seed de aleatoriedade
@@ -59,8 +61,8 @@ def normalize_data(subset):
     return subset
 
 # TRATANDO O DATASET
-#df = pd.read_csv("csv_result-KDDTrain+_20Percent.csv")
-df = pd.read_csv("KDDTrain+.csv")
+df = pd.read_csv("csv_result-KDDTrain+_20Percent.csv")
+#df = pd.read_csv("KDDTrain+.csv")
 for col in df.columns:
     df= df.rename({col:remove_initial_and_ending_spaces(col)}, axis='columns')
 
@@ -107,17 +109,16 @@ x_test = normalize_data(x_test)
 # PSO
 # Gerando 20 partículas da forma [0 0 1 0 ... 0 1] de tamanho 42 (número de features da database)
 columnsName1=[0,1]
-funct = "gb"
 particles=[] # Array de partículas
 for i in range(15):
     part1=[]
     for i in range(42):
         item = random.choice(tuple(columnsName1))
         part1.append(item)
-    if funct == "rf":
+    if funct.funct == "rf":
         part1.append(random.randint(50, 1000))
         
-    if funct == "gb":
+    if funct.funct == "gb":
         part1.append(random.randint(50, 1000))
         part1.append(random.uniform(0.1, 0.3))
             
@@ -138,11 +139,11 @@ pb=[]
     #print(particles[i])
     #chosen_columns = particle_choices(particles[i])
 start_time = time.time()
-if funct == "rf":
+if funct.funct == "rf":
         #pb.append(f1_score_calc_rf(chosen_columns, x_train, y_train, x_val, y_val, x_test, y_test, i, particles[i][42]))
     pb.append(Parallel(n_jobs=-1)(delayed(f1_score_calc_rf)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[42]) for i, p in enumerate(particles)))
 
-if funct == "gb":
+if funct.funct == "gb":
         #pb.append(f1_score_calc_gb(chosen_columns, x_train, y_train, x_val, y_val, x_test, y_test, i, particles[i][42], particles[i][43]))
     pb.append(Parallel(n_jobs=-1)(delayed(f1_score_calc_gb)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[42], p[43]) for i, p in enumerate(particles)))
 
@@ -165,13 +166,13 @@ def update_particles(velocity, particles):
 
 def inteiro(particles2):
     for l in range(len(particles2)):
-        if funct == "rf":
+        if funct.funct == "rf":
             if particles2[l][42] > 1000:
                 particles2[l][42] = 1000
             elif particles2[l][42] < 50:
                 particles2[l][42] = 50
             particles2[l][42] = int(particles2[l][42])
-        if funct == "gb":
+        if funct.funct == "gb":
             if particles2[l][42] > 1000:
                 particles2[l][42] = 1000
             elif particles2[l][42] < 50:
@@ -193,11 +194,11 @@ def inteiro(particles2):
 def update_pb(particles2, particles):
     personal=[]
     #for i in range(len(particles2)):
-    if funct == "rf":
+    if funct.funct == "rf":
             #personal.append(f1_score_calc_rf(particle_choices(particles2[i]), x_train, y_train, x_val, y_val, x_test, y_test, i, int(particles2[i][42])))
         personal.append(Parallel(n_jobs=-1)(delayed(f1_score_calc_rf)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[42]) for i, p in enumerate(particles2)))
 
-    if funct == "gb":
+    if funct.funct == "gb":
             #personal.append(f1_score_calc_gb(particle_choices(particles2[i]), x_train, y_train, x_val, y_val, x_test, y_test, i, int(particles2[i][42]), particles2[i][43]))
         personal.append(Parallel(n_jobs=-1)(delayed(f1_score_calc_gb)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, int(p[42]), p[43]) for i, p in enumerate(particles2)))
 
@@ -240,5 +241,23 @@ execution_time = end_time - start_time
 mins = execution_time // 60
 hours = mins // 60
 segs = execution_time % 60
-print("Tempo de execução:", hours, "horas,", mins, "minutos e", segs,"segundos")
+print("Tempo de execução:", int(hours), "horas,", int(mins), "minutos e", int(segs),"segundos")
 #PSO FUNCIONA E A FÓRMULA FOI APRIMORADA, PRÓXIMO PASSO É AVALIAR E COMPARAR O RESULTADO OBTIDO NO PSO COM OS OBTIDOS QUANDO SE UTILIZA TODAS AS FEATURES
+colunas_selecionadas = particle_choices(globalbest)
+x_train_optimal = x_train[colunas_selecionadas]
+x_val_optimal = x_val[colunas_selecionadas]
+print(x_train)
+x_train_optimal['class'] = y_train
+
+x_train_optimal = x_train_optimal[x_train_optimal['class'] == 0]
+x_train_optimal = x_train_optimal.drop(labels= 'class', axis= 1)
+x_train_optimal = normalize_data(x_train_optimal)
+print(x_train)
+
+history = ae.model.fit(x_train_optimal, x_train_optimal, epochs=50, batch_size=120,
+                    validation_data=(x_val_optimal, x_val_optimal),
+                     shuffle=True,
+                     callbacks=[ae.early_stopping]
+                     )
+
+#PRECISO VER SE PASSO AS LABELS PARA O X_TRAIN E PARA O X_VALIDATION

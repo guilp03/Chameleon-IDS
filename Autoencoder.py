@@ -33,8 +33,16 @@ class AutoEncoder(Model):
 model = AutoEncoder()
 early_stopping = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=2, mode="min")
 model.compile(optimizer='adam', loss="mae")
-# history = model.fit(normal_train_data, normal_train_data, epochs=50, batch_size=120,
-#                     validation_data=(train_data_scaled[:,1:], train_data_scaled[:, 1:]),
-#                     shuffle=True,
-#                     callbacks=[early_stopping]
-#                     )
+
+def get_metrics(model, normal_test_data,anomaly_test_data):
+    reconstruction = model.predict(normal_test_data)
+    train_loss = tf.keras.losses.mae(reconstruction, normal_test_data)
+    plt.hist(train_loss, bins=50)
+    threshold = np.mean(train_loss) + 2*np.std(train_loss)
+    reconstruction_a = model.predict(anomaly_test_data)
+    train_loss_a = tf.keras.losses.mae(reconstruction_a, anomaly_test_data)
+    preds = tf.math.less(train_loss, threshold)
+    print(tf.math.count_nonzero(preds))
+    preds_a = tf.math.greater(train_loss_a, threshold)
+    print(tf.math.count_nonzero(preds_a))
+    return
