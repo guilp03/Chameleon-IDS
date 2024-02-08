@@ -3,10 +3,32 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from pso2 import f1_score_calc_rf,f1_score_calc_gb
 import random
 from joblib import Parallel, delayed
 import time
+import RandomForest as rf
+import XGBoost as gb
+
+#FUNÇÃO QUE CALCULA O F1 DO RANDOM FOREST DADO UM CONJUNTO DE FEATURES
+def f1_score_calc_rf(particle_choices, x_train, y_train, x_val, y_val, x_test, y_test, i, n_estimators):
+    # Selecionar as colunas apropriadas
+    x_train_selected = x_train[particle_choices]
+    x_val_selected = x_val[particle_choices]
+    x_test_selected = x_test[particle_choices]
+    rf_model = rf.RandomForest(47, x_train_selected, y_train,n_estimators)
+    accuracy_rf, f1_rf, precision_rf, recall_rf = rf.get_metrics(rf_model, x_val_selected, y_val)
+    print(i,'accuracy:', accuracy_rf,'f1_score:',f1_rf, 'precision:', precision_rf, 'recall:', recall_rf)
+    return f1_rf
+
+def f1_score_calc_gb(particle_choices, x_train, y_train, x_val, y_val, x_test, y_test, i, n_estimators, leanrning_rate):
+    # Selecionar as colunas apropriadas
+    x_train_selected = x_train[particle_choices]
+    x_val_selected = x_val[particle_choices]
+    x_test_selected = x_test[particle_choices]
+    gb_model = gb.GradientBoost(x_train_selected, y_train, n_estimators, leanrning_rate)
+    accuracy_gb, f1_gb, precision_gb, recall_gb = gb.get_metrics(gb_model, x_val_selected, y_val)
+    print(i,'accuracy:', accuracy_gb,'f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb)
+    return f1_gb
 
 def normalize_data(subset):
     std_scaler = StandardScaler()
@@ -63,14 +85,15 @@ for column in not_numeric_columns:
     df[column] = df[column].astype(str)
     df[column] = encoder.fit_transform(df[column])
 
+df_subset = df.sample(frac=0.1, random_state=1)
+
 # Separando labels
-columnsName = df.drop(labels= 'Label', axis= 1).columns.values.tolist()
-y = df['Label']
-y = y.apply(lambda c: 0 if c == 'normal' else 1)
+columnsName = df_subset.drop(labels= 'Label', axis= 1).columns.values.tolist()
+y = df_subset['Label']
 
 # Divisão do conjunto de treino validação e teste
 # Dividindo a database em % para treinamento e % para validacao e testes
-x_train, x_val_test, y_train, y_val_test =  train_test_split(df[columnsName], y, test_size=0.3, random_state=42, stratify=df['Label'])
+x_train, x_val_test, y_train, y_val_test =  train_test_split(df_subset[columnsName], y, test_size=0.3, random_state=42, stratify=df_subset['Label'])
 
 # Reset dos índices dos subsets
 x_train = x_train.reset_index(drop=True)
@@ -97,7 +120,7 @@ funct = "rf"
 particles=[] # Array de partículas
 for i in range(15):
     part1=[]
-    for i in range(42):
+    for i in range(47):
         item = random.choice(tuple(columnsName1))
         part1.append(item)
     if funct == "rf":
@@ -112,10 +135,9 @@ for i in range(15):
 # Retorna as colunas escolhidas da partícula
 def particle_choices(particle):
     particle_columns=[]
-    for i in range(42):
+    for i in range(47):
         if particle[i]!=1:
                 particle_columns.append(columnsName[i])
-    #print(particle_choice)
     return particle_columns
 
 # Personal best array initialization
@@ -126,11 +148,11 @@ pb=[]
 start_time = time.time()
 if funct == "rf":
         #pb.append(f1_score_calc_rf(chosen_columns, x_train, y_train, x_val, y_val, x_test, y_test, i, particles[i][42]))
-    pb.append(Parallel(n_jobs=-1)(delayed(f1_score_calc_rf)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[42]) for i, p in enumerate(particles)))
+    pb.append(Parallel(n_jobs=-1)(delayed(f1_score_calc_rf)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[47]) for i, p in enumerate(particles)))
 
 if funct == "gb":
         #pb.append(f1_score_calc_gb(chosen_columns, x_train, y_train, x_val, y_val, x_test, y_test, i, particles[i][42], particles[i][43]))
-    pb.append(Parallel(n_jobs=-1)(delayed(f1_score_calc_gb)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[42], p[43]) for i, p in enumerate(particles)))
+    pb.append(Parallel(n_jobs=-1)(delayed(f1_score_calc_gb)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[47], p[48]) for i, p in enumerate(particles)))
 
 def checkvelocity(globalbest, particles, prev_velocity, inertia, prev_particles):
     inertia_array = np.array([inertia])
@@ -152,24 +174,24 @@ def update_particles(velocity, particles):
 def inteiro(particles2):
     for l in range(len(particles2)):
         if funct == "rf":
-            if particles2[l][42] > 1000:
-                particles2[l][42] = 1000
-            elif particles2[l][42] < 50:
-                particles2[l][42] = 50
-            particles2[l][42] = int(particles2[l][42])
+            if particles2[l][47] > 1000:
+                particles2[l][47] = 1000
+            elif particles2[l][47] < 50:
+                particles2[l][47] = 50
+            particles2[l][47] = int(particles2[l][47])
         if funct == "gb":
-            if particles2[l][42] > 1000:
-                particles2[l][42] = 1000
-            elif particles2[l][42] < 50:
-                particles2[l][42] = 50
-            if particles2[l][43] > 0.3:
-                particles2[l][43] = 0.3
-            if particles2[l][43] < 0.1:
-                particles2[l][43] = 0.1
-            particles2[l][42] = int(particles2[l][42])
+            if particles2[l][47] > 1000:
+                particles2[l][47] = 1000
+            elif particles2[l][47] < 50:
+                particles2[l][47] = 50
+            if particles2[l][48] > 0.3:
+                particles2[l][48] = 0.3
+            if particles2[l][48] < 0.1:
+                particles2[l][48] = 0.1
+            particles2[l][47] = int(particles2[l][47])
 
 
-        for m in range(42):
+        for m in range(47):
             if particles2[l][m]>0.5:
                 particles2[l][m]=1
             else:
@@ -180,8 +202,8 @@ def update_pb(particles2, particles):
     personal=[]
     #for i in range(len(particles2)):
     if funct == "rf":
-            #personal.append(f1_score_calc_rf(particle_choices(particles2[i]), x_train, y_train, x_val, y_val, x_test, y_test, i, int(particles2[i][42])))
-        personal.append(Parallel(n_jobs=-1)(delayed(f1_score_calc_rf)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[42]) for i, p in enumerate(particles2)))
+            #personal.append(f1_score_calc_rf(particle_choices(particles2[i]), x_train, y_train, x_val, y_val, x_test, y_test, i, int(particles2[i][47])))
+        personal.append(Parallel(n_jobs=-1)(delayed(f1_score_calc_rf)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[47]) for i, p in enumerate(particles2)))
 
     if funct == "gb":
             #personal.append(f1_score_calc_gb(particle_choices(particles2[i]), x_train, y_train, x_val, y_val, x_test, y_test, i, int(particles2[i][42]), particles2[i][43]))
@@ -197,8 +219,8 @@ def update_pb(particles2, particles):
 max(pb)
 ind = pb.index(max(pb))
 globalbest=particles[ind]
-velocity = [0] * 42
-particles2=[0] * 42 # Novo valor de particles depois da iteração
+velocity = [0] * 47
+particles2=[0] * 47 # Novo valor de particles depois da iteração
 itter = 30
 for i in range(itter):
     #inertia = 0.9 - ((0.5 / itter) * (i))
