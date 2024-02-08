@@ -91,6 +91,8 @@ df_subset = df.sample(frac=0.1, random_state=1)
 columnsName = df_subset.drop(labels= 'Label', axis= 1).columns.values.tolist()
 y = df_subset['Label']
 
+df_subset = normalize_data(df_subset)
+
 # Divisão do conjunto de treino validação e teste
 # Dividindo a database em % para treinamento e % para validacao e testes
 x_train, x_val_test, y_train, y_val_test =  train_test_split(df_subset[columnsName], y, test_size=0.3, random_state=42, stratify=df_subset['Label'])
@@ -107,11 +109,6 @@ x_val, x_test = x_val.reset_index(drop=True), x_test.reset_index(drop=True)
 y_val, y_test =  y_val.reset_index(drop=True), y_test.reset_index(drop=True)
 
 del x_val_test
-
-# Normalizando dados
-x_train = normalize_data(x_train)
-x_val = normalize_data(x_val)
-x_test = normalize_data(x_test)
 
 # PSO
 # Gerando 20 partículas da forma [0 0 1 0 ... 0 1] de tamanho 42 (número de features da database)
