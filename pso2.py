@@ -18,6 +18,9 @@ from joblib import Parallel, delayed
 import time
 import funct
 import Autoencoder as ae
+import torch
+import torch.nn as nn
+import torch.optim as optim
 
 
 # Definindo seed de aleatoriedade
@@ -249,12 +252,25 @@ x_train_optimal['class'] = y_train
 x_train_optimal = x_train_optimal[x_train_optimal['class'] == 0]
 x_train_optimal = x_train_optimal.drop(labels= 'class', axis= 1)
 x_train_optimal = normalize_data(x_train_optimal)
-print(x_train)
+print(x_train_optimal)
 
-history = ae.model.fit(x_train_optimal, x_train_optimal, epochs=50, batch_size=120,
-                    validation_data=(x_val_optimal, x_val_optimal),
-                     shuffle=True,
-                     callbacks=[ae.early_stopping]
-                     )
+benign_x_train_optimal = x_val_optimal[y == 1]
+benign_x_train_optimal = torch.FloatTensor(benign_x_train_optimal)
+
+BATCH_SIZE = 256
+ALPHA = 5e-4
+PATIENCE = 2
+DELTA = 0.001
+NUM_EPOCHS = 3
+IN_FEATURES = x_train_optimal.shape[1]
+
+ae_model = ae.Autoencoder(IN_FEATURES)
+ae_model.compile(learning_rate= ALPHA)
+train_avg_losses, val_avg_losses = ae_model.fit(torch.FloatTensor(x_train_optimal),
+                                                NUM_EPOCHS,
+                                                BATCH_SIZE,
+                                                X_val = benign_x_train_optimal,
+                                                patience = PATIENCE,
+                                                delta = DELTA)
 
 #PRECISO VER SE PASSO AS LABELS PARA O X_TRAIN E PARA O X_VALIDATION
