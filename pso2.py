@@ -273,4 +273,4 @@ train_avg_losses, val_avg_losses = ae_model.fit(torch.FloatTensor(x_train_optima
                                                 patience = PATIENCE,
                                                 delta = DELTA)
 
-#PRECISO VER SE PASSO AS LABELS PARA O X_TRAIN E PARA O X_VALIDATION
+#ALTERAR A ARQUITETURA DO AUTOENCODER, ADICIONAR UM REGULARIZADOR E TESTAR
