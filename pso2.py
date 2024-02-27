@@ -10,7 +10,8 @@ import re
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import confusion_matrix
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import RandomForest as rf
 import XGBoost as gb
 from sklearn.preprocessing import LabelEncoder
@@ -87,7 +88,7 @@ encoder = LabelEncoder()
 for column in not_numeric_columns:
     df[column] = encoder.fit_transform(df[column])
 
-normalize_data(df)
+#normalize_data(df)
 
 # Divisão do conjunto de treino validação e teste
 # Dividindo a database em % para treinamento e % para validacao e testes
@@ -214,7 +215,7 @@ ind = pb.index(max(pb))
 globalbest=particles[ind]
 velocity = [0] * 42
 particles2=[0] * 42 # Novo valor de particles depois da iteração
-itter = 30
+itter = 2
 for i in range(itter):
     #inertia = 0.9 - ((0.5 / itter) * (i))
     inertia = 0.5
@@ -237,40 +238,84 @@ globalbest=particles[ind]
 
 print(particle_choices(globalbest))
 print(len(particle_choices(globalbest)))
+
 execution_time = end_time - start_time
 mins = execution_time // 60
 hours = mins // 60
 segs = execution_time % 60
 print("Tempo de execução:", int(hours), "horas,", int(mins), "minutos e", int(segs),"segundos")
+del df
 #PSO FUNCIONA E A FÓRMULA FOI APRIMORADA, PRÓXIMO PASSO É AVALIAR E COMPARAR O RESULTADO OBTIDO NO PSO COM OS OBTIDOS QUANDO SE UTILIZA TODAS AS FEATURES
+minmax_scaler = MinMaxScaler()
 colunas_selecionadas = particle_choices(globalbest)
 x_train_optimal = x_train[colunas_selecionadas]
 x_val_optimal = x_val[colunas_selecionadas]
 print(x_train)
 x_train_optimal['class'] = y_train
-
-x_train_optimal = x_train_optimal[x_train_optimal['class'] == 0]
+#x_train_optimal = x_train_optimal[x_train_optimal['class'] == 0]
 x_train_optimal = x_train_optimal.drop(labels= 'class', axis= 1)
-x_train_optimal = normalize_data(x_train_optimal)
+
+minmax_scaler = minmax_scaler.fit(x_train_optimal)
+
+x_train_optimal = minmax_scaler.transform(x_train_optimal)
+x_val_optimal = minmax_scaler.transform(x_val_optimal)
+
+#x_train_optimal = normalize_data(x_train_optimal)
 print(x_train_optimal)
+del x_train, x_val
+benign_x_val_optimal = x_val_optimal[y_val == 1]
 
-benign_x_train_optimal = x_val_optimal[y == 1]
-benign_x_train_optimal = torch.FloatTensor(benign_x_train_optimal)
+benign_x_val_optimal = torch.FloatTensor(benign_x_val_optimal)
 
-BATCH_SIZE = 256
+BATCH_SIZE = 32
 ALPHA = 5e-4
-PATIENCE = 2
+PATIENCE = 7
 DELTA = 0.001
-NUM_EPOCHS = 3
+NUM_EPOCHS = 5
 IN_FEATURES = x_train_optimal.shape[1]
-
+start_time = time.time()
 ae_model = ae.Autoencoder(IN_FEATURES)
 ae_model.compile(learning_rate= ALPHA)
 train_avg_losses, val_avg_losses = ae_model.fit(torch.FloatTensor(x_train_optimal),
                                                 NUM_EPOCHS,
                                                 BATCH_SIZE,
-                                                X_val = benign_x_train_optimal,
+                                                X_val = benign_x_val_optimal,
                                                 patience = PATIENCE,
                                                 delta = DELTA)
 
+end_time = time.time()
+execution_time = end_time - start_time
+mins = execution_time // 60
+hours = mins // 60
+segs = execution_time % 60
+print("Tempo de execução:", int(hours), "horas,", int(mins), "minutos e", int(segs),"segundos")
+
+def plot_train_val_losses(train_avg_losses, val_avg_losses):
+  epochs = list(range(1, len(train_avg_losses)+1))
+  plt.plot(epochs, train_avg_losses, color='blue', label='Loss do treino')
+  plt.plot(epochs, val_avg_losses, color='orange', label='Loss da validação')
+  plt.title('Losses de treino e validação por época de treinamento')
+  plt.legend()
+
+plot_train_val_losses(train_avg_losses, val_avg_losses)
+
+def get_autoencoder_anomaly_scores(ae_model, X):
+  X = torch.FloatTensor(X)
+  reconstructed_X = ae_model(X)
+  anomaly_scores = torch.mean(torch.pow(X - reconstructed_X, 2), axis=1).detach().numpy() # MSELoss
+  return anomaly_scores
+val_anomaly_scores = get_autoencoder_anomaly_scores(ae_model, x_val_optimal)
 #ALTERAR A ARQUITETURA DO AUTOENCODER, ADICIONAR UM REGULARIZADOR E TESTAR
+
+def get_overall_metrics(y_true, y_pred):
+  tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+  acc = (tp+tn)/(tp+tn+fp+fn)
+  tpr = tp/(tp+fn)
+  fpr = fp/(fp+tn)
+  precision = tp/(tp+fp)
+  f1 = (2*tpr*precision)/(tpr+precision)
+  return {'acc':acc,'tpr':tpr,'fpr':fpr,'precision':precision,'f1-score':f1}
+
+BEST_VALIDATION_THRESHOLD = 0.018680
+
+print(get_overall_metrics(y_val, val_anomaly_scores > BEST_VALIDATION_THRESHOLD))

@@ -38,32 +38,41 @@ class EarlyStopping:
     
 class Autoencoder(nn.Module):
     
-  def __init__(self, in_features, dropout_rate=0.2):
+  def __init__(self, in_features, dropout_rate=0.5):
     super().__init__()
 
     self.in_features = in_features
     self.dropout_rate = dropout_rate
     self.early_stopping = None
     self.encoder = nn.Sequential(
-      # Camada 1 de encoding:
-      nn.Linear(in_features, 25),
-      nn.BatchNorm1d(25),
+      # Camada 1:
+      nn.Linear(in_features, 128),
+      nn.BatchNorm1d(128),
       nn.ReLU(),
       nn.Dropout(dropout_rate),
-      # Camada 2 de encoding:
-      nn.Linear(25, 10),
-      nn.BatchNorm1d(10),
+      # Camada 2:
+      nn.Linear(128, 64),
+      nn.BatchNorm1d(64),
+      nn.ReLU(),
+      # Camade 3:
+      nn.Linear(64, 32),
+      nn.BatchNorm1d(32),
       nn.ReLU()
     )
 
     self.decoder = nn.Sequential(
-      # Camada 1 de decoding:
-      nn.Linear(10, 25),
-      nn.BatchNorm1d(25),
+      # Camada 4: 
+      nn.Linear(32, 64),
+      nn.BatchNorm1d(64),
       nn.ReLU(),
       nn.Dropout(dropout_rate),
-      # Camada 2 de decoding:
-      nn.Linear(25, in_features),
+      #Camada 5:
+      nn.Linear(64,128),
+      nn.BatchNorm1d(128),
+      nn.ReLU(),
+      nn.Dropout(dropout_rate),
+      # Camada 6 de decoding:
+      nn.Linear(128, in_features),
       nn.BatchNorm1d(in_features),
       nn.Sigmoid()
     )
@@ -73,9 +82,9 @@ class Autoencoder(nn.Module):
     decoded = self.decoder(encoded)
     return decoded
 
-  def compile(self, learning_rate):
+  def compile(self, learning_rate, weight_decay = 0.001):
     self.criterion = nn.MSELoss()
-    self.optimizer = optim.Adam(self.parameters(), lr = learning_rate)
+    self.optimizer = optim.Adam(self.parameters(), lr = learning_rate, weight_decay=weight_decay)
 
   def fit(self, X_train, num_epochs, batch_size, X_val = None, patience = None, delta = None):
     if X_val is not None and patience is not None and delta is not None:
@@ -123,10 +132,3 @@ class Autoencoder(nn.Module):
       self = torch.load('checkpoint.pt')
     self.eval()
     return train_avg_losses, val_avg_losses
-
-BATCH_SIZE = 256
-LR = 5e-4
-PATIENCE = 2
-DELTA = 0.001
-NUM_EPOCHS = 3
-IN_FEATURES = x_train_optimal.shape[1]
