@@ -215,7 +215,7 @@ ind = pb.index(max(pb))
 globalbest=particles[ind]
 velocity = [0] * 42
 particles2=[0] * 42 # Novo valor de particles depois da iteração
-itter = 2
+itter = 30
 for i in range(itter):
     #inertia = 0.9 - ((0.5 / itter) * (i))
     inertia = 0.5
@@ -269,9 +269,9 @@ benign_x_val_optimal = torch.FloatTensor(benign_x_val_optimal)
 
 BATCH_SIZE = 32
 ALPHA = 5e-4
-PATIENCE = 7
+PATIENCE = 2
 DELTA = 0.001
-NUM_EPOCHS = 5
+NUM_EPOCHS = 100
 IN_FEATURES = x_train_optimal.shape[1]
 start_time = time.time()
 ae_model = ae.Autoencoder(IN_FEATURES)
@@ -316,6 +316,6 @@ def get_overall_metrics(y_true, y_pred):
   f1 = (2*tpr*precision)/(tpr+precision)
   return {'acc':acc,'tpr':tpr,'fpr':fpr,'precision':precision,'f1-score':f1}
 
-BEST_VALIDATION_THRESHOLD = 0.018680
+BEST_VALIDATION_THRESHOLD = 0.512
 
 print(get_overall_metrics(y_val, val_anomaly_scores > BEST_VALIDATION_THRESHOLD))
