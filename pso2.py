@@ -325,24 +325,27 @@ def get_overall_metrics(y_true, y_pred):
   f1 = (2*tpr*precision)/(tpr+precision)
   return {'acc':acc,'tpr':tpr,'fpr':fpr,'precision':precision,'f1-score':f1}
 
-BEST_VALIDATION_THRESHOLD = 0.02
-print(get_overall_metrics(y_val, val_anomaly_scores > BEST_VALIDATION_THRESHOLD))
+#BEST_VALIDATION_THRESHOLD = 0.02
+#print(get_overall_metrics(y_val, val_anomaly_scores > BEST_VALIDATION_THRESHOLD))
 
-#lista_arrays = [float(i) for i in range(1, 91)]  # Gerar números inteiros de 1 a 90
-#lista_arrays = [x / 100 for x in lista_arrays]
-#lista_f1 =[]
-#best_f1 = 0.0
-#best_thresh = 0.0
-#for i in lista_arrays:
-#    print(get_overall_metrics(y_val, val_anomaly_scores > i))
-#    valor = get_overall_metrics(y_val, val_anomaly_scores > i)
-#    if isinstance(valor, float):
-#        lista_f1.append(valor)
-#        if valor > best_f1:
-#            best_f1 = valor
-#            best_thresh = i
-#print(best_thresh, best_f1)
-#plt.plot(lista_arrays, lista_f1, color='blue', label='f1s')
-#plt.title('f1')
-#plt.legend()
-#plt.show()
+lista_arrays = [float(i) for i in range(1, 91)]  # Gerar números inteiros de 1 a 90
+lista_arrays = [x / 100 for x in lista_arrays]
+lista_f1 =[]
+best_f1 = 0.0
+best_thresh = 0.0
+for i in lista_arrays:
+    metrics = get_overall_metrics(y_val, val_anomaly_scores > i)
+    print(metrics)
+    f1_score = metrics['f1-score']
+    lista_f1.append(f1_score)
+    if f1_score > best_f1:
+        best_f1 = f1_score
+        best_thresh = i
+
+print("Melhor Threshold:", best_thresh)
+print("Melhor F1-score:", best_f1)
+
+plt.plot(lista_arrays, lista_f1, color='blue', label='f1s')
+plt.title('f1')
+plt.legend()
+plt.show()
