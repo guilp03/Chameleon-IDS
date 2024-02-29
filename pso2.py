@@ -92,7 +92,7 @@ for column in not_numeric_columns:
 
 # Divisão do conjunto de treino validação e teste
 # Dividindo a database em % para treinamento e % para validacao e testes
-x_train, x_val_test, y_train, y_val_test =  train_test_split(df[columnsName], y, test_size=0.3, random_state=42, stratify=df['class'])
+x_train, x_val_test, y_train, y_val_test =  train_test_split(df[columnsName], y, test_size=0.1, random_state=42, stratify=df['class'])
 
 # Reset dos índices dos subsets
 x_train = x_train.reset_index(drop=True)
@@ -117,7 +117,7 @@ for i in range(15):
         item = random.choice(tuple(columnsName1))
         part1.append(item)
     if funct.funct == "rf":
-        part1.append(random.randint(50, 1000))
+        part1.append(random.randint(50, 600))
         
     if funct.funct == "gb":
         part1.append(random.randint(50, 1000))
@@ -129,7 +129,7 @@ for i in range(15):
 def particle_choices(particle):
     particle_columns=[]
     for i in range(42):
-        if particle[i]!=1:
+        if particle[i]==1:
                 particle_columns.append(columnsName[i])
     #print(particle_choice)
     return particle_columns
@@ -142,47 +142,50 @@ pb=[]
 start_time = time.time()
 if funct.funct == "rf":
         #pb.append(f1_score_calc_rf(chosen_columns, x_train, y_train, x_val, y_val, x_test, y_test, i, particles[i][42]))
-    pb.append(Parallel(n_jobs=-1)(delayed(f1_score_calc_rf)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[42]) for i, p in enumerate(particles)))
+    pb.extend(Parallel(n_jobs=-1)(delayed(f1_score_calc_rf)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[42]) for i, p in enumerate(particles)))
 
 if funct.funct == "gb":
         #pb.append(f1_score_calc_gb(chosen_columns, x_train, y_train, x_val, y_val, x_test, y_test, i, particles[i][42], particles[i][43]))
-    pb.append(Parallel(n_jobs=-1)(delayed(f1_score_calc_gb)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[42], p[43]) for i, p in enumerate(particles)))
-
-def checkvelocity(globalbest, particles, prev_velocity, inertia, prev_particles):
+    pb.extend(Parallel(n_jobs=-1)(delayed(f1_score_calc_gb)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[42], p[43]) for i, p in enumerate(particles)))
+def checkvelocity(globalbest, pb_particles, prev_velocity, inertia, prev_particles):
     inertia_array = np.array([inertia])
     velocity=[]
     for j in range(len(particles)):
-        velocity.append(list((prev_velocity[j] * inertia_array) + (np.random.random(1)[0]) * (np.array(particles[j]) - np.array(prev_particles[j])) + 2 * (np.random.random(1)[0]) * (np.array(globalbest) - np.array(particles[j]))))
+        velocity.append(list((prev_velocity[j] * inertia_array) + 2 * random.random() * (np.array(pb_particles[j]) - np.array(prev_particles[j])) + 2 * random.random() * (np.array(globalbest) - np.array(prev_particles[j]))))
     #print(velocity)
     return velocity
 
 def update_particles(velocity, particles):
     particles_updated=[]
     for i in range(len(velocity)):
+        #print(particles[i])
         nextparticle=[]
         for j in range(len(velocity[i])):
             nextparticle.append(particles[i][j]+velocity[i][j])
+    
         particles_updated.append(nextparticle)
+        #print(particles_updated[i])
+
     return particles_updated
 
 def inteiro(particles2):
     for l in range(len(particles2)):
         if funct.funct == "rf":
-            if particles2[l][42] > 1000:
-                particles2[l][42] = 1000
-            elif particles2[l][42] < 50:
-                particles2[l][42] = 50
-            particles2[l][42] = int(particles2[l][42])
+            if particles2[l][-1] > 600:
+                particles2[l][-1] = 600
+            elif particles2[l][-1] < 50:
+                particles2[l][-1] = 50
+            particles2[l][-1] = int(particles2[l][-1])
         if funct.funct == "gb":
-            if particles2[l][42] > 1000:
-                particles2[l][42] = 1000
-            elif particles2[l][42] < 50:
-                particles2[l][42] = 50
-            if particles2[l][43] > 0.3:
-                particles2[l][43] = 0.3
-            if particles2[l][43] < 0.1:
-                particles2[l][43] = 0.1
-            particles2[l][42] = int(particles2[l][42])
+            if particles2[l][-2] > 1000:
+                particles2[l][-2] = 1000
+            elif particles2[l][-2] < 50:
+                particles2[l][-2] = 50
+            if particles2[l][-1] > 0.3:
+                particles2[l][-1] = 0.3
+            if particles2[l][-1] < 0.1:
+                particles2[l][-1] = 0.1
+            particles2[l][-2] = int(particles2[l][-2])
 
 
         for m in range(42):
@@ -192,17 +195,17 @@ def inteiro(particles2):
                 particles2[l][m]=0
     return particles2
 
-def update_pb(particles2, particles):
+def update_pb(particles2, particles, pb):
     personal=[]
     #for i in range(len(particles2)):
     if funct.funct == "rf":
             #personal.append(f1_score_calc_rf(particle_choices(particles2[i]), x_train, y_train, x_val, y_val, x_test, y_test, i, int(particles2[i][42])))
-        personal.append(Parallel(n_jobs=-1)(delayed(f1_score_calc_rf)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[42]) for i, p in enumerate(particles2)))
+        personal.extend(Parallel(n_jobs=-1)(delayed(f1_score_calc_rf)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[42]) for i, p in enumerate(particles2)))
 
     if funct.funct == "gb":
             #personal.append(f1_score_calc_gb(particle_choices(particles2[i]), x_train, y_train, x_val, y_val, x_test, y_test, i, int(particles2[i][42]), particles2[i][43]))
-        personal.append(Parallel(n_jobs=-1)(delayed(f1_score_calc_gb)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, int(p[42]), p[43]) for i, p in enumerate(particles2)))
-
+        personal.extend(Parallel(n_jobs=-1)(delayed(f1_score_calc_gb)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, int(p[42]), p[43]) for i, p in enumerate(particles2)))
+        
     for j in range(len(personal)):
         if(personal[j]>pb[j]):
             particles[j]=particles2[j]
@@ -210,31 +213,35 @@ def update_pb(particles2, particles):
     return personal
 
 # Inicialização
-max(pb)
+#pb = pb.tolist()
 ind = pb.index(max(pb))
+print(particles[ind])
 globalbest=particles[ind]
-velocity = [0] * 42
-particles2=[0] * 42 # Novo valor de particles depois da iteração
-itter = 30
+globalbest_f1 = 0.5
+if funct.funct == 'gb':
+    velocity = [0] * 44
+elif funct.funct == 'rf':
+    velocity = [0] * 43
+particles2 = particles
+itter = 5
 for i in range(itter):
     #inertia = 0.9 - ((0.5 / itter) * (i))
     inertia = 0.5
     personal=[]
-    velocity=checkvelocity(globalbest=globalbest, particles=particles, prev_velocity=velocity, inertia=inertia, prev_particles=particles2)
+    velocity=checkvelocity(globalbest=globalbest, pb_particles=particles, prev_velocity=velocity, inertia=inertia, prev_particles=particles2)
     particles2=update_particles(velocity, particles)
     particles2=inteiro(particles2)
-    personal=update_pb(particles2, particles) # Atualiza valor de personal best (ignorar return)
-    particles = particles2
-    globalbest=[]
+    personal=update_pb(particles2, particles, pb) # Atualiza valor de personal best (ignorar return)
     ind = pb.index(max(pb))
-    globalbest=particles[ind]
-    print(particles[ind])
+    print(max(pb))
+    if max(pb) > globalbest_f1:   
+     globalbest=particles[ind]
+     globalbest_f1 = max(pb)
     print("Iteração:", i)
+    print(globalbest)
+    print(globalbest_f1)
                 
 end_time = time.time()
-
-ind = pb.index(max(pb))
-globalbest=particles[ind]
 
 print(particle_choices(globalbest))
 print(len(particle_choices(globalbest)))
@@ -242,6 +249,7 @@ print(len(particle_choices(globalbest)))
 execution_time = end_time - start_time
 mins = execution_time // 60
 hours = mins // 60
+mins = execution_time // 60 - (hours *60)
 segs = execution_time % 60
 print("Tempo de execução:", int(hours), "horas,", int(mins), "minutos e", int(segs),"segundos")
 del df
@@ -250,7 +258,6 @@ minmax_scaler = MinMaxScaler()
 colunas_selecionadas = particle_choices(globalbest)
 x_train_optimal = x_train[colunas_selecionadas]
 x_val_optimal = x_val[colunas_selecionadas]
-print(x_train)
 x_train_optimal['class'] = y_train
 #x_train_optimal = x_train_optimal[x_train_optimal['class'] == 0]
 x_train_optimal = x_train_optimal.drop(labels= 'class', axis= 1)
@@ -261,7 +268,6 @@ x_train_optimal = minmax_scaler.transform(x_train_optimal)
 x_val_optimal = minmax_scaler.transform(x_val_optimal)
 
 #x_train_optimal = normalize_data(x_train_optimal)
-print(x_train_optimal)
 del x_train, x_val
 benign_x_val_optimal = x_val_optimal[y_val == 1]
 
@@ -269,9 +275,9 @@ benign_x_val_optimal = torch.FloatTensor(benign_x_val_optimal)
 
 BATCH_SIZE = 32
 ALPHA = 5e-4
-PATIENCE = 2
+PATIENCE = 7
 DELTA = 0.001
-NUM_EPOCHS = 100
+NUM_EPOCHS = 1000
 IN_FEATURES = x_train_optimal.shape[1]
 start_time = time.time()
 ae_model = ae.Autoencoder(IN_FEATURES)
@@ -287,6 +293,7 @@ end_time = time.time()
 execution_time = end_time - start_time
 mins = execution_time // 60
 hours = mins // 60
+mins = execution_time // 60 - (hours *60)
 segs = execution_time % 60
 print("Tempo de execução:", int(hours), "horas,", int(mins), "minutos e", int(segs),"segundos")
 
@@ -296,6 +303,7 @@ def plot_train_val_losses(train_avg_losses, val_avg_losses):
   plt.plot(epochs, val_avg_losses, color='orange', label='Loss da validação')
   plt.title('Losses de treino e validação por época de treinamento')
   plt.legend()
+  plt.show()
 
 plot_train_val_losses(train_avg_losses, val_avg_losses)
 
@@ -304,6 +312,7 @@ def get_autoencoder_anomaly_scores(ae_model, X):
   reconstructed_X = ae_model(X)
   anomaly_scores = torch.mean(torch.pow(X - reconstructed_X, 2), axis=1).detach().numpy() # MSELoss
   return anomaly_scores
+
 val_anomaly_scores = get_autoencoder_anomaly_scores(ae_model, x_val_optimal)
 #ALTERAR A ARQUITETURA DO AUTOENCODER, ADICIONAR UM REGULARIZADOR E TESTAR
 
@@ -316,6 +325,24 @@ def get_overall_metrics(y_true, y_pred):
   f1 = (2*tpr*precision)/(tpr+precision)
   return {'acc':acc,'tpr':tpr,'fpr':fpr,'precision':precision,'f1-score':f1}
 
-BEST_VALIDATION_THRESHOLD = 0.512
-
+BEST_VALIDATION_THRESHOLD = 0.02
 print(get_overall_metrics(y_val, val_anomaly_scores > BEST_VALIDATION_THRESHOLD))
+
+#lista_arrays = [float(i) for i in range(1, 91)]  # Gerar números inteiros de 1 a 90
+#lista_arrays = [x / 100 for x in lista_arrays]
+#lista_f1 =[]
+#best_f1 = 0.0
+#best_thresh = 0.0
+#for i in lista_arrays:
+#    print(get_overall_metrics(y_val, val_anomaly_scores > i))
+#    valor = get_overall_metrics(y_val, val_anomaly_scores > i)
+#    if isinstance(valor, float):
+#        lista_f1.append(valor)
+#        if valor > best_f1:
+#            best_f1 = valor
+#            best_thresh = i
+#print(best_thresh, best_f1)
+#plt.plot(lista_arrays, lista_f1, color='blue', label='f1s')
+#plt.title('f1')
+#plt.legend()
+#plt.show()
