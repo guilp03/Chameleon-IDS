@@ -45,7 +45,7 @@ class Autoencoder(nn.Module):
     self.dropout_rate = dropout_rate
     self.early_stopping = None
     self.encoder = nn.Sequential(
-      # Camada 1:
+        # Camada 1:
       nn.Linear(in_features, 128),
       nn.BatchNorm1d(128),
       nn.ReLU(),
@@ -61,23 +61,24 @@ class Autoencoder(nn.Module):
     )
 
     self.decoder = nn.Sequential(
-      # Camada 4: 
-      nn.Linear(32, 64),
-      nn.BatchNorm1d(64),
-      nn.ReLU(),
-      nn.Dropout(dropout_rate),
-      #Camada 5:
-      nn.Linear(64,128),
-      nn.BatchNorm1d(128),
-      nn.ReLU(),
-      nn.Dropout(dropout_rate),
-      # Camada 6 de decoding:
-      nn.Linear(128, in_features),
-      nn.BatchNorm1d(in_features),
-      nn.Sigmoid()
+         # Camada 4: 
+        nn.Linear(32, 64),
+        nn.BatchNorm1d(64),
+        nn.ReLU(),
+        nn.Dropout(dropout_rate),
+        #Camada 5:
+        nn.Linear(64,128),
+        nn.BatchNorm1d(128),
+        nn.ReLU(),
+        nn.Dropout(dropout_rate),
+        # Camada 6 de decoding:
+        nn.Linear(128, in_features),
+        nn.BatchNorm1d(in_features),
+        nn.Sigmoid()
     )
 
   def forward(self, X):
+    # Processar a entrada sequencialmente
     encoded = self.encoder(X)
     decoded = self.decoder(encoded)
     return decoded
