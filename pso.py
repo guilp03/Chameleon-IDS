@@ -5,6 +5,7 @@ import dataset
 import numpy as np
 import pandas as pd
 from particle_schema import Particle
+from dataset import split_train_test
       
 def Search_Space(funct: str, n_features: int):
     """ Função para definir os valores iniciais da partícula de acordo com o método de ensemble escolhido 
@@ -30,19 +31,15 @@ def Search_Space(funct: str, n_features: int):
 
     return initial_position
 
-def Evaluate_fitness(funct: str, particle: Particle, ColumnsName: list[str], x_train: pd.DataFrame, y_train: pd.DataFrame | pd.Series, x_val: pd.DataFrame, y_val: pd.DataFrame | pd.Series, x_test: pd.DataFrame, y_test: pd.DataFrame | pd.Series, i: int, n_features: int | None =None):
+def Evaluate_fitness(funct: str, particle: Particle, ColumnsName: list[str], df: pd.DataFrame, y: pd.DataFrame, i: int, n_features: int | None =None):
     """ Função para calcular o f1_score de uma partícula
 
         Args:
             funct (str): rf para random forest ou gb para XGboost
             particle (Particle): partícula que se quer o f1_score
             ColumnsName (list[str]): lista de colunas do dataset das quais uma partícula pode selecionar
-            x_train (pd.DataFrame): DataFrame de features para treinamento
-            y_train (pd.Series | pd.DataFrame): Series ou DataFrame de target para treinamento
-            x_val (pd.DataFrame): DataFrame de features para validação
-            y_val (pd.Series | pd.DataFrame): Series ou DataFrame de target para validação
-            x_test (pd.DataFrame): DataFrame de features para teste
-            y_test (pd.Series | pd.DataFrame): Series ou DataFrame de target para teste
+            df (pd.DataFrame): base de dados
+            y (pd.DataFrame): labels
             i (int): índice da partícula na população
             n_features (int, optional): número de features a serem selecionadas
 
@@ -52,10 +49,10 @@ def Evaluate_fitness(funct: str, particle: Particle, ColumnsName: list[str], x_t
     """
     # Selecionando as colunas da partícula
     particle_choices = dataset.particle_choices(particle, ColumnsName, n_features)
+    x_train, y_train, x_val, y_val = split_train_test(df, ColumnsName, y, particle.position[0])
     if funct == "gb":
         x_train_selected = x_train[particle_choices]
         x_val_selected = x_val[particle_choices]
-        x_test_selected = x_test[particle_choices]
         gb_model = gb.GradientBoost(x_train_selected, y_train, particle.position[-2], particle.position[-1])
         accuracy_gb, f1_gb, precision_gb, recall_gb = gb.get_metrics(gb_model, x_val_selected, y_val)
         print(i,'accuracy:', accuracy_gb,'f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb)
@@ -64,8 +61,7 @@ def Evaluate_fitness(funct: str, particle: Particle, ColumnsName: list[str], x_t
         # Selecionar as colunas apropriadas
         x_train_selected = x_train[particle_choices]
         x_val_selected = x_val[particle_choices]
-        x_test_selected = x_test[particle_choices]
-        rf_model = rf.RandomForest(42, x_train_selected, y_train,particle.position[2])
+        rf_model = rf.RandomForest(n_features, x_train_selected, y_train,particle.position[-1])
         accuracy_rf, f1_rf, precision_rf, recall_rf = rf.get_metrics(rf_model, x_val_selected, y_val)
         print(i,'accuracy:', accuracy_rf,'f1_score:',f1_rf, 'precision:', precision_rf, 'recall:', recall_rf)
         return f1_rf
