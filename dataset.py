@@ -10,6 +10,7 @@ from sklearn.preprocessing import StandardScaler
 import RandomForest as rf
 import pso2 as pso
 from sklearn.preprocessing import LabelEncoder
+from particle_schema import Particle
 
 
 
@@ -73,13 +74,24 @@ def preprocessing(df):
     
     return x_train, y_train, x_val, y_val, x_test, y_test
 
-def particle_choices(particle, columnsName):
+def particle_choices(particle: Particle, columnsName: list[str], n_features: int):
+    """ Retorna um array de strings com o nome das colunas selecionadas pela partícula
+
+        Args:
+            particle (Particle): partícula em questão
+            columnsName (list[str]): nome das colunas do dataset
+            n_features (int): número de features do dataset
+
+        Returns:
+            particle_columns (list[str]): lista das colunas escolhidas pela partícula
+    """
     particle_columns=[]
-    for i in range(42):
-        if particle[i]==1:
-                particle_columns.append(columnsName[i])
-    #print(particle_choice)
+    for i in range(1, n_features + 1): # Verifica do índice 1 até o índice n_features (range é exclusivo com limite superior)
+        if particle.position[i] == 1:
+                particle_columns.append(columnsName[i - 1])
+
     return particle_columns
+
 def normalize_data(subset):
     std_scaler = StandardScaler()
     colunas_numericas = subset.select_dtypes(include=['number'])
