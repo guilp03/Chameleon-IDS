@@ -58,42 +58,41 @@ def Evaluate_fitness(funct: str, particle: Particle, ColumnsName: list[str], df:
     
     """
     # Selecionando as colunas da partícula
-    particle_choices = dataset.particle_choices(particle, ColumnsName, n_features)
+    particle_choices = dataset.particle_choices(particle.position, ColumnsName, n_features)
     x_train, y_train, x_val, y_val = split_train_test(df, ColumnsName, y, particle.position[0])
+    x_train_selected = x_train[particle_choices]
+    x_val_selected = x_val[particle_choices]
     if funct == "gb":
     # Selecionar as colunas apropriadas
-        particle_choices = dataset.particle_choices(particle.position, ColumnsName)
-        x_train_selected = x_train[particle_choices]
-        x_val_selected = x_val[particle_choices]
         gb_model = gb.GradientBoost(x_train_selected, y_train, particle.position[-2], particle.position[-1])
         accuracy_gb, f1_gb, precision_gb, recall_gb = gb.get_metrics(gb_model, x_val_selected, y_val)
-        print(particle.position)
-        print(i,'accuracy:', accuracy_gb,'f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb)
+        #print(particle.position)
+        #print(i,'accuracy:', accuracy_gb,'f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb)
         return f1_gb
     else:
         # Selecionar as colunas apropriadas
-        x_train_selected = x_train[particle_choices]
-        x_val_selected = x_val[particle_choices]
         rf_model = rf.RandomForest(n_features, x_train_selected, y_train,particle.position[-1])
         accuracy_rf, f1_rf, precision_rf, recall_rf = rf.get_metrics(rf_model, x_val_selected, y_val)
         print(particle.position)
         print(i,'accuracy:', accuracy_rf,'f1_score:',f1_rf, 'precision:', precision_rf, 'recall:', recall_rf)
         return f1_rf
     
-def checkvelocity(globalbest: list, particle: Particle, inertia: float):
+def checkvelocity(globalbest: list, particle: Particle, inertia: float, c1: int, c2: int):
     """ Calcula o array de velocidade de uma data partícula segundo o algorítmo PSO
         
         Args:
             globalbest (list): Melhor configuração encontrada para a partícula até então
             particle (Particle): partícula em questão
             inertia (float): hiperparâmetro da equação do PSO
+            c1 (int): hiperparâmetro da equção do PSO
+            c2 (int): hiperparâmetro da equção do PSO
     
         Returns:
             velocity (array): array do tamanho de particles.position que contém as velocidades de cada índice da partícula.
     """
     inertia_array = np.array([inertia])
     
-    velocity =(list((particle.position * inertia_array) + 2 * random.random() * (np.array(particle.personal_best) - np.array(particle.position)) + 2 * random.random() * (np.array(globalbest) - np.array(particle.position))))
+    velocity =(list((particle.position * inertia_array) + c1 * random.random() * (np.array(particle.personal_best) - np.array(particle.position)) + c2 * random.random() * (np.array(globalbest) - np.array(particle.position))))
     #print(velocity)
     return velocity
 
@@ -135,11 +134,11 @@ def inteiro(particle: Particle, funct: str, n_features: int):
         particle.position[-1] = np.clip(particle.position[-1], 0.1, 0.3)
     """
     particle.position[0] = np.clip(particle.position[0], 0.1, 0.4)
-    if funct.funct == "rf":
-        particle.potition[-1] = int(np.clip(particle.position[-1], 50, 1000))
-    if funct.funct == "gb":
+    if funct == "rf":
+        particle.position[-1] = int(np.clip(particle.position[-1], 50, 1000))
+    if funct == "gb":
         particle.position[-2] = int(np.clip(particle.position[-2], 50, 1000))
-        particle.potition[-1] = np.clip(particle.position[-1], 0.1, 0.3)
+        particle.position[-1] = np.clip(particle.position[-1], 0.1, 0.3)
         
     for m in range(1, n_features + 1):
         if particle.position[m]>0.5:

@@ -44,13 +44,42 @@ def split_train_test(df, columnsName, y, test_size):
     """
     # Divisão do conjunto de treino validação e teste
     # Dividindo a database em % para treinamento e % para validacao e testes
-    x_train, x_val, y_train, y_val =  train_test_split(df[columnsName], y, test_size=test_size, random_state=42, stratify=df['class'])
+    x_train, x_val, y_train, y_val =  train_test_split(df[columnsName], y, test_size=test_size, random_state=42, stratify=y)
 
     # Reset dos índices dos subsets
     x_train = x_train.reset_index(drop=True)
     x_val = x_val.reset_index(drop=True)
     
     return x_train, y_train, x_val, y_val
+
+def split_train_val_test(df, columnsName,y ,test_size):
+    """ Divisão do conjunto em treino e teste 
+
+    Args:
+        df (pd.DataFrame): base de dados
+        columnsName (list[str]): lista de colunas do dataset
+        y (pd.DataFrame): labels
+        test_size (float): tamanho das samples de testes
+    
+    Returns:
+        x_train (pd.DataFrame): subset de treinamento do df
+        y_train (pd.DataFrame): labels do subset de treinamento do df
+        x_val (pd.DataFrame): subset de validação do df
+        y_val (pd.DataFrame): labels do subset de validação do df
+
+"""
+    # Divisão do conjunto de treino validação e teste
+    # Dividindo a database em % para treinamento e % para validacao e testes
+    x_train, x_val_test, y_train, y_val_test =  train_test_split(df[columnsName], y, test_size=test_size, random_state=42, stratify=y)
+    x_val, y_val, x_test, y_test = train_test_split(x_val_test, y_val_test, test_size=0.5, random_state=42, stratify=y_val_test)
+
+    # Reset dos índices dos subsets
+    x_train = x_train.reset_index(drop=True)
+    x_val = x_val.reset_index(drop=True)
+    x_test = x_test.reset_index(drop=True)
+    return x_train, y_train, x_val, y_val, x_test, y_test
+    
+    
 
 def preprocessing(df):
     for col in df.columns:
@@ -75,14 +104,15 @@ def preprocessing(df):
         df[column] = encoder.fit_transform(df[column])
 
     df = normalize_data(df)
+    df = df.drop(labels= 'class', axis=1)
 
-    return df
+    return df, columnsName, y
 
-def particle_choices(particle: Particle, columnsName: list[str], n_features: int):
+def particle_choices(pos, columnsName: list[str], n_features: int):
     """ Retorna um array de strings com o nome das colunas selecionadas pela partícula
 
         Args:
-            particle (Particle): partícula em questão
+            pos (list): a posição da partícula
             columnsName (list[str]): nome das colunas do dataset
             n_features (int): número de features do dataset
 
@@ -91,7 +121,7 @@ def particle_choices(particle: Particle, columnsName: list[str], n_features: int
     """
     particle_columns=[]
     for i in range(1, n_features + 1): # Verifica do índice 1 até o índice n_features (range é exclusivo com limite superior)
-        if particle.position[i] == 1:
+        if pos[i] == 1:
                 particle_columns.append(columnsName[i - 1])
 
     return particle_columns
@@ -103,13 +133,15 @@ def normalize_data(subset):
     subset = colunas_numericas_scaler
     return subset
 
-def get_optimal_subesets(x_train, x_val, x_test, optimal_solution, columnsName):
-    particle_choices = particle_choices(optimal_solution, columnsName)
-    x_train_selected = x_train[particle_choices]
-    x_val_selected = x_val[particle_choices]
-    x_test_selected = x_test[particle_choices]
+def get_optimal_subesets(df, optimal_solution, columnsName, y , test_size, n_features):
+    x_train, y_train, x_val, y_val, x_test, y_test = split_train_val_test(df, columnsName,y ,test_size)
     
-    return x_train_selected, x_val_selected, x_test_selected
+    chosen_columns = particle_choices(optimal_solution, columnsName, n_features)
+    x_train_selected = x_train[chosen_columns]
+    x_val_selected = x_val[chosen_columns]
+    x_test_selected = x_test[chosen_columns]
+    
+    return x_train_selected, x_val_selected, x_test_selected, y_train, y_val, y_test
 
 def get_time(start_time, end_time):
     execution_time = end_time - start_time
