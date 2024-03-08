@@ -1,14 +1,9 @@
 import numpy as np
 import pandas as pd
-import os
 import re
 import seaborn as sns
-import random
-import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-import RandomForest as rf
-import pso2 as pso
 from sklearn.preprocessing import LabelEncoder
 from particle_schema import Particle
 
@@ -107,3 +102,19 @@ def normalize_data(subset):
     colunas_numericas_scaler = pd.DataFrame(std_scaler.fit_transform(colunas_numericas), columns=colunas_numericas.columns)
     subset = colunas_numericas_scaler
     return subset
+
+def get_optimal_subesets(x_train, x_val, x_test, optimal_solution, columnsName):
+    particle_choices = particle_choices(optimal_solution, columnsName)
+    x_train_selected = x_train[particle_choices]
+    x_val_selected = x_val[particle_choices]
+    x_test_selected = x_test[particle_choices]
+    
+    return x_train_selected, x_val_selected, x_test_selected
+
+def get_time(start_time, end_time):
+    execution_time = end_time - start_time
+    mins = execution_time // 60
+    hours = mins // 60
+    mins = execution_time // 60 - (hours *60)
+    segs = execution_time % 60
+    print("Tempo de execução:", int(hours), "horas,", int(mins), "minutos e", int(segs),"segundos")

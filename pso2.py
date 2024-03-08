@@ -17,7 +17,7 @@ import XGBoost as gb
 from sklearn.preprocessing import LabelEncoder
 from joblib import Parallel, delayed
 import time
-import funct
+funct = "gb"
 import Autoencoder as ae
 import torch
 import torch.nn as nn
@@ -116,10 +116,10 @@ for i in range(15):
     for i in range(42):
         item = random.choice(tuple(columnsName1))
         part1.append(item)
-    if funct.funct == "rf":
+    if funct == "rf":
         part1.append(random.randint(50, 600))
         
-    if funct.funct == "gb":
+    if funct == "gb":
         part1.append(random.randint(50, 1000))
         part1.append(random.uniform(0.1, 0.3))
             
@@ -140,11 +140,11 @@ pb=[]
     #print(particles[i])
     #chosen_columns = particle_choices(particles[i])
 start_time = time.time()
-if funct.funct == "rf":
+if funct == "rf":
         #pb.append(f1_score_calc_rf(chosen_columns, x_train, y_train, x_val, y_val, x_test, y_test, i, particles[i][42]))
     pb.extend(Parallel(n_jobs=-1)(delayed(f1_score_calc_rf)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[42]) for i, p in enumerate(particles)))
 
-if funct.funct == "gb":
+if funct == "gb":
         #pb.append(f1_score_calc_gb(chosen_columns, x_train, y_train, x_val, y_val, x_test, y_test, i, particles[i][42], particles[i][43]))
     pb.extend(Parallel(n_jobs=-1)(delayed(f1_score_calc_gb)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[42], p[43]) for i, p in enumerate(particles)))
 def checkvelocity(globalbest, pb_particles, prev_velocity, inertia, prev_particles):
@@ -170,13 +170,13 @@ def update_particles(velocity, particles):
 
 def inteiro(particles2):
     for l in range(len(particles2)):
-        if funct.funct == "rf":
+        if funct == "rf":
             if particles2[l][-1] > 600:
                 particles2[l][-1] = 600
             elif particles2[l][-1] < 50:
                 particles2[l][-1] = 50
             particles2[l][-1] = int(particles2[l][-1])
-        if funct.funct == "gb":
+        if funct == "gb":
             if particles2[l][-2] > 1000:
                 particles2[l][-2] = 1000
             elif particles2[l][-2] < 50:
@@ -198,11 +198,11 @@ def inteiro(particles2):
 def update_pb(particles2, particles, pb):
     personal=[]
     #for i in range(len(particles2)):
-    if funct.funct == "rf":
+    if funct == "rf":
             #personal.append(f1_score_calc_rf(particle_choices(particles2[i]), x_train, y_train, x_val, y_val, x_test, y_test, i, int(particles2[i][42])))
         personal.extend(Parallel(n_jobs=-1)(delayed(f1_score_calc_rf)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, p[42]) for i, p in enumerate(particles2)))
 
-    if funct.funct == "gb":
+    if funct == "gb":
             #personal.append(f1_score_calc_gb(particle_choices(particles2[i]), x_train, y_train, x_val, y_val, x_test, y_test, i, int(particles2[i][42]), particles2[i][43]))
         personal.extend(Parallel(n_jobs=-1)(delayed(f1_score_calc_gb)(particle_choices(p), x_train, y_train, x_val, y_val, x_test, y_test, i, int(p[42]), p[43]) for i, p in enumerate(particles2)))
         
@@ -218,9 +218,9 @@ ind = pb.index(max(pb))
 print(particles[ind])
 globalbest=particles[ind]
 globalbest_f1 = 0.5
-if funct.funct == 'gb':
+if funct == 'gb':
     velocity = [0] * 44
-elif funct.funct == 'rf':
+elif funct == 'rf':
     velocity = [0] * 43
 particles2 = particles
 itter = 5

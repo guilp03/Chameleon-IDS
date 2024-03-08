@@ -1,14 +1,10 @@
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import tensorflow as tf
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from tqdm.notebook import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from sklearn.metrics import confusion_matrix
+
 
 class EarlyStopping:
   def __init__(self, patience=7, delta=0, verbose=True, path='checkpoint.pt'):
@@ -133,3 +129,17 @@ class Autoencoder(nn.Module):
       self = torch.load('checkpoint.pt')
     self.eval()
     return train_avg_losses, val_avg_losses
+def get_autoencoder_anomaly_scores(ae_model, X):
+  X = torch.FloatTensor(X)
+  reconstructed_X = ae_model(X)
+  anomaly_scores = torch.mean(torch.pow(X - reconstructed_X, 2), axis=1).detach().numpy() # MSELoss
+  return anomaly_scores
+
+def get_overall_metrics(y_true, y_pred):
+  tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+  acc = (tp+tn)/(tp+tn+fp+fn)
+  tpr = tp/(tp+fn)
+  fpr = fp/(fp+tn)
+  precision = tp/(tp+fp)
+  f1 = (2*tpr*precision)/(tpr+precision)
+  return {'acc':acc,'tpr':tpr,'fpr':fpr,'precision':precision,'f1-score':f1}

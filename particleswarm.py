@@ -36,4 +36,3 @@ for particle in swarm:
     if particle.pb_val > globalbes_val:
         globalbest = particle.position.copy()
         globalbes_val = particle.pb_val
-
