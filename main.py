@@ -85,11 +85,20 @@ optimal_x_train, optimal_x_val, optimal_x_test, benign_x_val_optimal = dataset.t
 benign_x_val_optimal_tensor = torch.FloatTensor(benign_x_val_optimal)
 optimal_x_train_tensor = torch.FloatTensor(optimal_x_train)
 
-BATCH_SIZE = 32
-ALPHA = 5e-4
-PATIENCE = 7
+#BATCH_SIZE = 32
+#ALPHA = 5e-4
+#PATIENCE = 7
+#DELTA = 0.001
+#NUM_EPOCHS = 500
+#IN_FEATURES = optimal_x_train.shape[1]
+#DROPOUT_RATE = 0.5
+#REGULARIZER = 0.001
+
+BATCH_SIZE = 16
+ALPHA = 0.1
+PATIENCE = 15
 DELTA = 0.001
-NUM_EPOCHS = 500
+NUM_EPOCHS = 1000
 IN_FEATURES = optimal_x_train.shape[1]
 DROPOUT_RATE = 0.5
 REGULARIZER = 0.001
@@ -107,7 +116,7 @@ train_avg_losses, val_avg_losses = ae_model.fit(optimal_x_train_tensor,
 end_time = time.time()
 dataset.get_time(start_time, end_time)
 
-ae.plot_train_val_losses(train_avg_losses, val_avg_losses)
+#ae.plot_train_val_losses(train_avg_losses, val_avg_losses)
 val_anomaly_scores = ae.get_autoencoder_anomaly_scores(ae_model, optimal_x_val)
 
 lista_arrays = [float(i) for i in range(1, 91)]  # Gerar números inteiros de 1 a 90
@@ -121,8 +130,14 @@ for i in lista_arrays:
     lista_f1.append(f1_score)
     if f1_score > best_f1:
         best_f1 = f1_score
+        precision = metrics['precision']
+        tpr = metrics['tpr']
+        accuracy = metrics['acc']
+        fpr = metrics['fpr']
         best_thresh = i
 
 print("Melhor Threshold:", best_thresh)
 print("Melhor F1-score:", best_f1)
+
+print("metricas:", "f1_score:", best_f1, "precision:", precision, "accuracy:", accuracy, "tpr:", tpr, "fpr:", fpr)
 
