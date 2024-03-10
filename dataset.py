@@ -71,7 +71,7 @@ def split_train_val_test(df, columnsName,y ,test_size):
     # Divisão do conjunto de treino validação e teste
     # Dividindo a database em % para treinamento e % para validacao e testes
     x_train, x_val_test, y_train, y_val_test =  train_test_split(df[columnsName], y, test_size=test_size, random_state=42, stratify=y)
-    x_val, y_val, x_test, y_test = train_test_split(x_val_test, y_val_test, test_size=0.5, random_state=42, stratify=y_val_test)
+    x_val, x_test, y_val, y_test = train_test_split(x_val_test, y_val_test, test_size=0.5, random_state=42, stratify=y_val_test)
 
     # Reset dos índices dos subsets
     x_train = x_train.reset_index(drop=True)
@@ -135,7 +135,9 @@ def normalize_data(subset):
 
 def get_optimal_subesets(df, optimal_solution, columnsName, y , test_size, n_features):
     x_train, y_train, x_val, y_val, x_test, y_test = split_train_val_test(df, columnsName,y ,test_size)
-    
+    print(x_train)
+    print(x_val)
+    print(x_test)
     chosen_columns = particle_choices(optimal_solution, columnsName, n_features)
     x_train_selected = x_train[chosen_columns]
     x_val_selected = x_val[chosen_columns]

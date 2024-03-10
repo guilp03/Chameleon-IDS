@@ -74,8 +74,9 @@ end_time = time.time()
 dataset.get_time(start_time, end_time)
 print(dataset.particle_choices(globalbest, columnsName, n_features=42))
 print(len(dataset.particle_choices(globalbest,columnsName, n_features=42)))
-
-benign_x_val_optimal = optimal_x_val[optimal_y_test == 1]
+optimal_x_val['class'] = optimal_y_val
+benign_x_val_optimal = optimal_x_val[optimal_x_val['class']== 1]
+optimal_x_val = optimal_x_val.drop(labels = 'class', axis = 1)
 benign_x_val_optimal = torch.FloatTensor(benign_x_val_optimal)
 optimal_x_train_tensor = torch.FloatTensor(optimal_x_train)
 
