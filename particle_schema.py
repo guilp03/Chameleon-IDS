@@ -7,7 +7,7 @@ class Particle:
     index: int # Identificador único da partícula
 
     def __init__(self, index: int, initial_position: list, funct: str):
-        self.velocity = [0] * 43 if funct == "rf" else [0] * 44
+        self.velocity = [0] * 44 if funct == "rf" else [0] * 45
         self.position = initial_position
         self.personal_best = initial_position
         self.pb_val = 0

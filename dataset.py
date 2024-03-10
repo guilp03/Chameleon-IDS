@@ -3,10 +3,10 @@ import pandas as pd
 import re
 import seaborn as sns
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.preprocessing import LabelEncoder
 from particle_schema import Particle
-
+np.random.seed(42)
 
 
 # Função para remover espaços iniciais e finais
@@ -144,6 +144,17 @@ def get_optimal_subesets(df, optimal_solution, columnsName, y , test_size, n_fea
     x_test_selected = x_test[chosen_columns]
     
     return x_train_selected, x_val_selected, x_test_selected, y_train, y_val, y_test
+
+def transform_MinMaxScaler(x_train, x_val, x_test, benign_x_train):
+    minmax_scaler = MinMaxScaler()
+    minmax_scaler = minmax_scaler.fit(x_train)
+    
+    x_train = minmax_scaler.transform(x_train)
+    x_val = minmax_scaler.transform(x_val)
+    x_test = minmax_scaler.transform(x_test)
+    benign_x_train = minmax_scaler.transform(benign_x_train)
+    
+    return x_train, x_val, x_test, benign_x_train
 
 def get_time(start_time, end_time):
     execution_time = end_time - start_time

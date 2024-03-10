@@ -4,8 +4,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from sklearn.metrics import confusion_matrix
-
-
+np.random.seed(42)
+torch.manual_seed(42)
 class EarlyStopping:
   def __init__(self, patience=7, delta=0, verbose=True, path='checkpoint.pt'):
       self.patience = patience
@@ -129,11 +129,19 @@ class Autoencoder(nn.Module):
       self = torch.load('checkpoint.pt')
     self.eval()
     return train_avg_losses, val_avg_losses
+  
 def get_autoencoder_anomaly_scores(ae_model, X):
-  X = torch.FloatTensor(X)
-  reconstructed_X = ae_model(X)
-  anomaly_scores = torch.mean(torch.pow(X - reconstructed_X, 2), axis=1).detach().numpy() # MSELoss
-  return anomaly_scores
+    X_tensor = torch.FloatTensor(X)
+    reconstructed_X = ae_model(X_tensor)
+    
+    # Converter o tensor reconstruído para um array NumPy
+    reconstructed_X_np = reconstructed_X.detach().numpy()
+    
+    # Calcular os escores de anomalia usando MSELoss
+    anomaly_scores = np.mean(np.power(X - reconstructed_X_np, 2), axis=1)
+    
+    return anomaly_scores
+
 
 def get_overall_metrics(y_true, y_pred):
   tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()

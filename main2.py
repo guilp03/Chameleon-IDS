@@ -6,7 +6,9 @@ import time
 import torch
 import Autoencoder as ae
 from joblib import Parallel, delayed
+import random
 torch.manual_seed(42)
+random.seed(42)
 
 funct = "gb"
 df = pd.read_csv("csv_result-KDDTrain+_20Percent.csv")
@@ -85,44 +87,70 @@ optimal_x_train, optimal_x_val, optimal_x_test, benign_x_val_optimal = dataset.t
 benign_x_val_optimal_tensor = torch.FloatTensor(benign_x_val_optimal)
 optimal_x_train_tensor = torch.FloatTensor(optimal_x_train)
 
-BATCH_SIZE = 32
-ALPHA = 5e-4
-PATIENCE = 7
-DELTA = 0.001
-NUM_EPOCHS = 500
-IN_FEATURES = optimal_x_train.shape[1]
-DROPOUT_RATE = 0.5
-REGULARIZER = 0.001
+# Função para otimizar
+def optimize_autoencoder_hyperparameters(IN_FEATURES):
+    # Definir intervalos para os hiperparâmetros
+    hyperparameter_ranges = {
+        'BATCH_SIZE': [8, 16, 32, 64, 128, 256],
+        'ALPHA': [1e-4,1e-3, 1e-2,1e-1],
+        'PATIENCE': [15],
+        'DELTA': [0.001],
+        'NUM_EPOCHS': [1000],
+        'DROPOUT_RATE': [0.1, 0.2, 0.3, 0.4, 0.5],
+        'REGULARIZER': [1e-4,1e-3,1e-2]
+    }
 
-start_time = time.time()
-ae_model = ae.Autoencoder(IN_FEATURES, DROPOUT_RATE)
-ae_model.compile(learning_rate= ALPHA, weight_decay=REGULARIZER)
-train_avg_losses, val_avg_losses = ae_model.fit(optimal_x_train_tensor,
-                                                NUM_EPOCHS,
-                                                BATCH_SIZE,
-                                                X_val = benign_x_val_optimal_tensor,
-                                                patience = PATIENCE,
-                                                delta = DELTA)
+    # Definir o número de iterações da busca aleatória
+    num_iterations = 40
 
-end_time = time.time()
-dataset.get_time(start_time, end_time)
+    # Melhores hiperparâmetros e seu desempenho
+    best_hyperparameters = {}
+    best_f1_score = float('-inf')
 
-ae.plot_train_val_losses(train_avg_losses, val_avg_losses)
-val_anomaly_scores = ae.get_autoencoder_anomaly_scores(ae_model, optimal_x_val)
+    for _ in range(num_iterations):
+        # Amostrar hiperparâmetros aleatoriamente dentro dos intervalos especificados
+        hyperparameters = {param: random.choice(values) for param, values in hyperparameter_ranges.items()}
 
-lista_arrays = [float(i) for i in range(1, 91)]  # Gerar números inteiros de 1 a 90
-lista_arrays = [x / 100 for x in lista_arrays]
-lista_f1 =[]
-best_f1 = 0.0
-best_thresh = 0.0
-for i in lista_arrays:
-    metrics = ae.get_overall_metrics(optimal_y_val, val_anomaly_scores > i)
-    f1_score = metrics['f1-score']
-    lista_f1.append(f1_score)
-    if f1_score > best_f1:
-        best_f1 = f1_score
-        best_thresh = i
+        # Configurar e treinar o modelo com os hiperparâmetros amostrados
+        ae_model = ae.Autoencoder(IN_FEATURES, hyperparameters['DROPOUT_RATE'])
+        ae_model.compile(learning_rate=hyperparameters['ALPHA'], weight_decay=hyperparameters['REGULARIZER'])
 
-print("Melhor Threshold:", best_thresh)
-print("Melhor F1-score:", best_f1)
+        train_avg_losses, val_avg_losses = ae_model.fit(optimal_x_train_tensor,
+                                                        hyperparameters['NUM_EPOCHS'],
+                                                        hyperparameters['BATCH_SIZE'],
+                                                        X_val=benign_x_val_optimal_tensor,
+                                                        patience=hyperparameters['PATIENCE'],
+                                                        delta=hyperparameters['DELTA'])
 
+        # Avaliar o desempenho do modelo usando o F1-score
+        val_anomaly_scores = ae.get_autoencoder_anomaly_scores(ae_model, optimal_x_val)
+
+        lista_arrays = [float(i) for i in range(1, 5000)]  # Gerar números inteiros de 1 a 90
+        lista_arrays = [x / 1000 for x in lista_arrays]
+        lista_f1 = []
+        best_f1 = 0.0
+        best_thresh = 0.0   
+        for i in lista_arrays:
+            metrics = ae.get_overall_metrics(optimal_y_val, val_anomaly_scores > i)
+            f1_score = metrics['f1-score']
+            lista_f1.append(f1_score)
+            if f1_score > best_f1:
+                best_f1 = f1_score
+                best_thresh = i
+        print("Melhor Threshold:", best_thresh)
+        print("Melhor F1-score:", best_f1)
+
+
+        # Atualizar os melhores hiperparâmetros se o desempenho atual for melhor
+        if best_f1 > best_f1_score:
+            best_f1_score = best_f1
+            best_hyperparameters = hyperparameters
+
+    return best_hyperparameters, best_f1_score
+
+# Executar a otimização dos hiperparâmetros
+best_hyperparameters, best_f1_score = optimize_autoencoder_hyperparameters(optimal_x_train.shape[1],)
+
+# Exibir os melhores hiperparâmetros encontrados e o melhor F1-score
+print("Melhores hiperparâmetros:", best_hyperparameters)
+print("Melhor F1-score:", best_f1_score)

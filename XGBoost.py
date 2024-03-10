@@ -2,7 +2,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 
 def GradientBoost(conjunto, labels, n_estimators, alpha):
-    gb_model = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=alpha, random_state=44)
+    gb_model = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=alpha, random_state=42)
     gb_model.fit(conjunto, labels)
     
     return gb_model

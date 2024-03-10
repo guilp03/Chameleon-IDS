@@ -3,7 +3,8 @@ import RandomForest as rf
 import XGBoost as gb
 import dataset
 import numpy as np
-
+random.seed(42)
+np.random.seed(42)
 class Particle:
   def __init__(self,number ,incial_position, funct):
       self.velocity = [0] * 43 if funct == "rf" else [0] * 44
@@ -92,7 +93,7 @@ def checkvelocity(globalbest: list, particle: Particle, inertia: float, c1: int,
     """
     inertia_array = np.array([inertia])
     
-    velocity =(list((particle.position * inertia_array) + c1 * random.random() * (np.array(particle.personal_best) - np.array(particle.position)) + c2 * random.random() * (np.array(globalbest) - np.array(particle.position))))
+    velocity =(list((particle.velocity * inertia_array) + c1 * random.random() * (np.array(particle.personal_best) - np.array(particle.position)) + c2 * random.random() * (np.array(globalbest) - np.array(particle.position))))
     #print(velocity)
     return velocity
 
