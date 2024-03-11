@@ -6,6 +6,7 @@ import torch.optim as optim
 from sklearn.metrics import confusion_matrix
 np.random.seed(42)
 torch.manual_seed(42)
+
 class EarlyStopping:
   def __init__(self, patience=7, delta=0, verbose=True, path='checkpoint.pt'):
       self.patience = patience

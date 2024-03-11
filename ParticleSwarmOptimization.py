@@ -5,6 +5,7 @@ import dataset
 import numpy as np
 random.seed(42)
 np.random.seed(42)
+
 class Particle:
   def __init__(self,number ,incial_position, funct):
       self.velocity = [0] * 43 if funct == "rf" else [0] * 44

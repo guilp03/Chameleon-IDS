@@ -350,7 +350,19 @@ plt.title('f1')
 plt.legend()
 plt.show()
 
-#Melhor Threshold: 0.001, 0.08
-#Melhor F1-score: 0.6359925788497217
+#Melhor Threshold: 0.08
 #Melhores hiperparâmetros: {'BATCH_SIZE': 16, 'ALPHA': 0.1, 'PATIENCE': 15, 'DELTA': 0.001, 'NUM_EPOCHS': 1000, 'DROPOUT_RATE': 0.5, 'REGULARIZER': 0.001}
 #Melhor F1-score: 0.877332517589477
+
+#Melhor Threshold: 0.001
+#Melhores hiperparâmetros: {'BATCH_SIZE': 16, 'ALPHA': 0.1, 'PATIENCE': 15, 'DELTA': 0.001, 'NUM_EPOCHS': 1000, 'DROPOUT_RATE': 0.5, 'REGULARIZER': 0.0001}
+#Melhor F1-score: 0.8756367995205275
+
+#Melhor Threshold: 0.088
+#Melhores hiperparâmetros: {'BATCH_SIZE': 16, 'ALPHA': 0.09, 'PATIENCE': 15, 'DELTA': 0.001, 'NUM_EPOCHS': 1000, 'DROPOUT_RATE': 0.5, 'REGULARIZER': 0.0008}
+#Melhor F1-score: 0.8831168831168831
+
+#Melhor Threshold: 0.082
+#Melhor F1-score: 0.8704756206999702
+#Melhores hiperparâmetros: {'BATCH_SIZE': 16, 'ALPHA': 0.09, 'PATIENCE': 15, 'DELTA': 0.0001, 'NUM_EPOCHS': 1000, 'DROPOUT_RATE': 0.5, 'REGULARIZER': 0.0007}
+#Melhor F1-score: 0.8851748684617766

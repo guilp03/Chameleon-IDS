@@ -91,23 +91,24 @@ optimal_x_train_tensor = torch.FloatTensor(optimal_x_train)
 def optimize_autoencoder_hyperparameters(IN_FEATURES):
     # Definir intervalos para os hiperparâmetros
     hyperparameter_ranges = {
-        'BATCH_SIZE': [8, 16, 32, 64, 128, 256],
-        'ALPHA': [1e-4,1e-3, 1e-2,1e-1],
+        'BATCH_SIZE': [16],
+        'ALPHA': [9e-2,9.2e-2,9.4e-2,9.6e-2,9.8e-2],
         'PATIENCE': [15],
-        'DELTA': [0.001],
+        'DELTA': [0.0001],
         'NUM_EPOCHS': [1000],
-        'DROPOUT_RATE': [0.1, 0.2, 0.3, 0.4, 0.5],
-        'REGULARIZER': [1e-4,1e-3,1e-2]
+        'DROPOUT_RATE': [0.5],
+        'REGULARIZER': [6e-4,6.5e-4,7e-4,7.5e-4,8e-4]
     }
 
     # Definir o número de iterações da busca aleatória
-    num_iterations = 40
+    num_iterations = 36
 
     # Melhores hiperparâmetros e seu desempenho
     best_hyperparameters = {}
     best_f1_score = float('-inf')
 
-    for _ in range(num_iterations):
+    for m in range(num_iterations):
+        print("iteração:", m)
         # Amostrar hiperparâmetros aleatoriamente dentro dos intervalos especificados
         hyperparameters = {param: random.choice(values) for param, values in hyperparameter_ranges.items()}
 
