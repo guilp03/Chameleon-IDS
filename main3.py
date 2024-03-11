@@ -4,7 +4,7 @@ import ParticleSwarmOptimization as pso
 import particle_schema as part
 import time
 import torch
-import Autoencoder as ae
+import Autoencoder_UNSWNB15 as ae
 from joblib import Parallel, delayed
 import random
 import dataset
@@ -12,7 +12,7 @@ torch.manual_seed(42)
 random.seed(42)
 
 funct = "gb"
-frac = 0.001
+frac = 0.01
 df, columnsName, y = UNSWNB15_dataset.preprocessing(frac)
 SWARM_SIZE = 15
 MAX_ITERATIONS = 30
@@ -51,7 +51,7 @@ def apply_pso(funct, particle, df, y):
     
     return particle
     
-itter = 1
+itter = 5
 for i in range(itter):
     print("Iteração:", i)
     #for particle in swarm:
