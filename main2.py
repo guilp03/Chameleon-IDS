@@ -92,12 +92,12 @@ def optimize_autoencoder_hyperparameters(IN_FEATURES):
     # Definir intervalos para os hiperparâmetros
     hyperparameter_ranges = {
         'BATCH_SIZE': [16],
-        'ALPHA': [9e-2,9.2e-2,9.4e-2,9.6e-2,9.8e-2],
+        'ALPHA': [9.6e-2],
         'PATIENCE': [15],
         'DELTA': [0.0001],
         'NUM_EPOCHS': [1000],
         'DROPOUT_RATE': [0.5],
-        'REGULARIZER': [6e-4,6.5e-4,7e-4,7.5e-4,8e-4]
+        'REGULARIZER': [7.5e-4]
     }
 
     # Definir o número de iterações da busca aleatória

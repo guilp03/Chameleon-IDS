@@ -9,7 +9,7 @@ from joblib import Parallel, delayed
 torch.manual_seed(42)
 
 funct = "gb"
-df = pd.read_csv("csv_result-KDDTrain+_20Percent.csv")
+df = pd.read_csv("KDD-all.csv")
 df.columns = df.columns.str.replace("'", "")
 df, columnsName, y = dataset.preprocessing(df)
 SWARM_SIZE = 15
@@ -48,7 +48,7 @@ def apply_pso(funct, particle, df, y):
     
     return particle
     
-itter = 5
+itter = 30
 for i in range(itter):
     print("Iteração:", i)
     #for particle in swarm:
@@ -95,13 +95,13 @@ optimal_x_train_tensor = torch.FloatTensor(optimal_x_train)
 #REGULARIZER = 0.001
 
 BATCH_SIZE = 16
-ALPHA = 0.1
+ALPHA = 0.096
 PATIENCE = 15
-DELTA = 0.001
+DELTA = 0.0001
 NUM_EPOCHS = 1000
 IN_FEATURES = optimal_x_train.shape[1]
 DROPOUT_RATE = 0.5
-REGULARIZER = 0.001
+REGULARIZER = 0.00075
 
 start_time = time.time()
 ae_model = ae.Autoencoder(IN_FEATURES, DROPOUT_RATE)

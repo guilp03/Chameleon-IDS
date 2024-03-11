@@ -366,3 +366,7 @@ plt.show()
 #Melhor F1-score: 0.8704756206999702
 #Melhores hiperparâmetros: {'BATCH_SIZE': 16, 'ALPHA': 0.09, 'PATIENCE': 15, 'DELTA': 0.0001, 'NUM_EPOCHS': 1000, 'DROPOUT_RATE': 0.5, 'REGULARIZER': 0.0007}
 #Melhor F1-score: 0.8851748684617766
+
+#Melhor Threshold: 0.081
+#elhores hiperparâmetros: {'BATCH_SIZE': 16, 'ALPHA': 0.096, 'PATIENCE': 15, 'DELTA': 0.0001, 'NUM_EPOCHS': 1000, 'DROPOUT_RATE': 0.5, 'REGULARIZER': 0.00075}
+#Melhor F1-score: 0.8898382667073542
