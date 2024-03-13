@@ -12,6 +12,7 @@ import XGBoost as gb
 #torch.manual_seed(42)
 #random.seed(42)
 
+# Definição de hiperparâmetros
 funct = "gb"
 frac = 0.001
 df, columnsName, y = UNSWNB15_dataset.preprocessing(frac)
@@ -27,6 +28,7 @@ start_time = time.time()
 swarm = []
 
 def process_particle(i, funct, columnsName, df, y):
+    """ Avalia a qualidade de uma partícula de acordo com a função Evalueate_fitness """
     inicial_position = pso.Search_Space(funct, n_features=len(columnsName))
     particle = part.Particle(i, inicial_position, funct=funct, columnsName=columnsName)
     particle.pb_val = pso.Evaluate_fitness(funct, particle, columnsName, df, y,particle.index, n_features=len(columnsName))
@@ -34,11 +36,12 @@ def process_particle(i, funct, columnsName, df, y):
     
     return particle
 
-#process_particle(0, funct, columnsName, df, y)
+# Inicialização de todas as partículas
 swarm.extend(Parallel(n_jobs=-1)(delayed(process_particle)(i, funct, columnsName, df,y) for i in range(SWARM_SIZE)))
 print(swarm[0].position)
 print(swarm[0].personal_best)
 
+# Valor do global best
 globalbest_val = max(p.pb_val for p in swarm)
 globalbest = max(swarm, key=lambda p: p.pb_val).position
 print(globalbest)
@@ -51,7 +54,8 @@ def apply_pso(funct, particle, df, y):
     particle = pso.update_pb(particle) # Atualiza valor de personal best (ignorar return)
     
     return particle
-    
+
+# Aplicando o algoritmo PSO
 for i in range(MAX_ITERATIONS):
     print("Iteração:", i)
     #for particle in swarm:
