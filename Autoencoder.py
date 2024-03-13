@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 from sklearn.metrics import confusion_matrix
 
-
+#CLASSE QUE DEFINE O EARLY STOP, BASEADA NO CÓDIGO APRESENTADO NA AULA DE AUTOENCODERS
 class EarlyStopping:
   def __init__(self, patience=7, delta=0, verbose=True, path='checkpoint.pt'):
       self.patience = patience
@@ -31,9 +31,9 @@ class EarlyStopping:
         print(f'Validation loss decreased ({self.val_min_loss:.5f} --> {val_loss:.5f}).  Saving model ...')
     torch.save(model, self.path)
     self.val_min_loss = val_loss
-    
+#CLASSE DO AUTOENCODER EM USA ARQUITETURA UTILIZADA NO NSL-KDD E CICS_IDS-2017 
 class Autoencoder(nn.Module):
-    
+  
   def __init__(self, in_features, dropout_rate=0.5):
     super().__init__()
 
@@ -80,6 +80,7 @@ class Autoencoder(nn.Module):
     return decoded
 
   def compile(self, learning_rate, weight_decay = 0.001):
+    #MSELOSS FOI USADA EM TODOS OS AUTOENCODERS COM REGULARIZAÇÃO L2
     self.criterion = nn.MSELoss()
     self.optimizer = optim.Adam(self.parameters(), lr = learning_rate, weight_decay=weight_decay)
 
