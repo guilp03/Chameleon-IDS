@@ -159,4 +159,5 @@ def get_overall_metrics(y_true, y_pred):
   fpr = fp/(fp+tn)
   precision = tp/(tp+fp)
   f1 = (2*tpr*precision)/(tpr+precision)
-  return {'acc':acc,'tpr':tpr,'fpr':fpr,'precision':precision,'f1-score':f1}
+  recall = tp/(tp+fn)
+  return {'acc':acc,'tpr':tpr,'fpr':fpr,'precision':precision,'f1-score':f1, 'recall': recall}
