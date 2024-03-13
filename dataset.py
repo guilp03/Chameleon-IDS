@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.preprocessing import LabelEncoder
 from particle_schema import Particle
-np.random.seed(42)
+#np.random.seed(42)
 
 
 # Função para remover espaços iniciais e finais
@@ -79,7 +79,53 @@ def split_train_val_test(df, columnsName,y ,test_size):
     x_test = x_test.reset_index(drop=True)
     return x_train, y_train, x_val, y_val, x_test, y_test
     
+def remove_initial_and_ending_spaces(name):
+    regex = r'^(?:\s+)?(?P<gp>.+?)(?:\s+)?$'
+    mo = re.search(regex, name)
+    if mo is not None:
+        return mo['gp']
+    else:
+        print(f'Deu erro em: {name}')
+        return name
     
+def preprocessing_CICS(df):
+    for col in df.columns:
+        df = df.rename({col:remove_initial_and_ending_spaces(col)}, axis='columns')
+    initial_len = df.shape[0]
+    
+    df = df.drop_duplicates()
+    print(f'Tamanho inicial: {initial_len}, tamanho final {df.shape[0]} | Descartadas {initial_len - df.shape[0]} duplicadas')
+    # Descartando registros com valores NaN/Null/NA
+    initial_len = df.shape[0]
+    df = df.dropna()
+    print(f'Tamanho inicial: {initial_len}, tamanho final {df.shape[0]} | Descartados {initial_len - df.shape[0]} registros com valores NA')
+    df = df.reset_index(drop=True)
+    
+    df_columns_isfinite = np.isfinite(df.drop(['Label'], axis='columns')).all(axis=0)
+    df_columns_isfinite[df_columns_isfinite == False] 
+    df_rows_isfinite = np.isfinite(df.drop(['Label'], axis='columns')).all(axis=1)
+    inf_indexes = df_rows_isfinite[df_rows_isfinite == False].index
+    
+    max_finite_flow_packets_per_sec = df[np.isfinite(df['Flow Packets/s'])]['Flow Packets/s'].max()
+    max_finite_flow_bytes_per_sec = df[np.isfinite(df['Flow Bytes/s'])]['Flow Bytes/s'].max()
+
+    df.loc[df['Flow Packets/s'] == np.inf, 'Flow Packets/s'] = max_finite_flow_packets_per_sec
+    df.loc[df['Flow Bytes/s'] == np.inf, 'Flow Bytes/s'] = max_finite_flow_bytes_per_sec
+    
+    df_not_numeric = df.select_dtypes(exclude=[np.number])
+    not_numeric_columns = df_not_numeric.columns
+    y = df['Label']
+    encoder = LabelEncoder()
+    for column in not_numeric_columns:
+        df[column] = encoder.fit_transform(df[column])
+    columnsName = df.drop(labels= 'Label', axis= 1).columns.values.tolist()
+    print(y)
+    y = y.apply(lambda c: 0 if c == 'BENIGN' else 1)
+    print(y)
+    df = df.drop(labels= 'Label', axis=1)
+    df = normalize_data(df)
+    
+    return df, columnsName, y
 
 def preprocessing(df):
     for col in df.columns:

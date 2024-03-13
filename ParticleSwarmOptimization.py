@@ -3,8 +3,8 @@ import RandomForest as rf
 import XGBoost as gb
 import dataset
 import numpy as np
-random.seed(42)
-np.random.seed(42)
+#random.seed(42)
+#np.random.seed(42)
 
 class Particle:
   def __init__(self,number ,incial_position, funct):
@@ -69,7 +69,7 @@ def Evaluate_fitness(funct: str, particle: Particle, ColumnsName: list[str], df:
         gb_model = gb.GradientBoost(x_train_selected, y_train, particle.position[-2], particle.position[-1])
         accuracy_gb, f1_gb, precision_gb, recall_gb = gb.get_metrics(gb_model, x_val_selected, y_val)
         #print(particle.position)
-        #print(i,'accuracy:', accuracy_gb,'f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb)
+        print(i,'accuracy:', accuracy_gb,'f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb)
         return f1_gb
     else:
         # Selecionar as colunas apropriadas
@@ -173,3 +173,4 @@ def check_globalbest(swarm, globalbest_val, globalbest):
             globalbest = particle.personal_best
     return globalbest_val, globalbest
 
+#['id', 'duration', 'protocol_type', 'service', 'src_bytes', 'dst_bytes', 'land', 'hot', 'num_failed_logins', 'num_compromised', 'num_file_creations', 'is_host_login', 'srv_count', 'srv_rerror_rate', 'diff_srv_rate', 'dst_host_diff_srv_rate', 'dst_host_same_src_port_rate', 'dst_host_srv_diff_host_rate', 'dst_host_rerror_rate']

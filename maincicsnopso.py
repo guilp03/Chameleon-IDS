@@ -12,26 +12,29 @@ import random
 
 torch.manual_seed(42)
 
-funct = "gb"
-df = pd.read_csv("csv_result-KDDTrain+_20Percent.csv")
-df.columns = df.columns.str.replace("'", "")
-df = df.drop(labels = 'id', axis = 1)
-df, columnsName, y = dataset.preprocessing(df)
+funct = "rf"
+df = pd.read_csv("Wednesday-workingHours.pcap_ISCX.csv")
+df.columns = df.columns.str.strip()
+print(df.columns)
+y = df['Label']
+_, df, _, y_aux = train_test_split(df.drop(labels= 'Label', axis =1), y, test_size=0.05, stratify=y)
+df['Label'] = y_aux
+df, columnsName, y = dataset.preprocessing_CICS(df)
 
 x_train, x_val_test, y_train, y_val_test =  train_test_split(df, y, test_size=0.13, random_state=42, stratify=y)
 x_val, x_test, y_val, y_test = train_test_split(x_val_test, y_val_test, test_size=0.5, random_state=42, stratify=y_val_test)
 
 # Reset dos índices dos subsets
-x_train['class'] = y_train
-x_train = x_train.query('`class` == 0')
-x_train = x_train.drop(labels = 'class', axis = 1)
+x_train['Label'] = y_train
+x_train = x_train.query('`Label` == 0')
+x_train = x_train.drop(labels = 'Label', axis = 1)
 x_train = x_train.reset_index(drop=True)
 x_val = x_val.reset_index(drop=True)
 x_test = x_test.reset_index(drop=True)
-x_val['class'] = y_val
-benign_x_val= x_val[x_val['class']== 1]
-benign_x_val = benign_x_val.drop(labels = 'class', axis = 1)
-x_val = x_val.drop(labels = 'class', axis = 1)
+x_val['Label'] = y_val
+benign_x_val= x_val[x_val['Label']== 1]
+benign_x_val = benign_x_val.drop(labels = 'Label', axis = 1)
+x_val = x_val.drop(labels = 'Label', axis = 1)
 
 minmax_scaler = MinMaxScaler()
 minmax_scaler = minmax_scaler.fit(x_train)

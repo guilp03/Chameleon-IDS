@@ -4,8 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from sklearn.metrics import confusion_matrix
-np.random.seed(42)
-torch.manual_seed(42)
+
 
 class EarlyStopping:
   def __init__(self, patience=7, delta=0, verbose=True, path='checkpoint.pt'):
@@ -146,9 +145,10 @@ def get_autoencoder_anomaly_scores(ae_model, X):
 
 def get_overall_metrics(y_true, y_pred):
   tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
-  acc = (tp+tn)/(tp+tn+fp+fn)
+  accuracy = (tp+tn)/(tp+tn+fp+fn)
   tpr = tp/(tp+fn)
   fpr = fp/(fp+tn)
   precision = tp/(tp+fp)
   f1 = (2*tpr*precision)/(tpr+precision)
-  return {'acc':acc,'tpr':tpr,'fpr':fpr,'precision':precision,'f1-score':f1}
+  recall = tp/(tp+fn)
+  return {'accuracy':accuracy,'tpr':tpr,'fpr':fpr,'precision':precision,'f1-score':f1, 'recall':recall}

@@ -7,13 +7,18 @@ import torch
 import Autoencoder as ae
 from joblib import Parallel, delayed
 import random
+from sklearn.model_selection import train_test_split
 
 
-funct = "rf"
-df = pd.read_csv("csv_result-KDDTrain+_20Percent.csv")
-df.columns = df.columns.str.replace("'", "")
-df = df.drop(labels = 'id', axis = 1)
-df, columnsName, y = dataset.preprocessing(df)
+
+funct = "gb"
+df = pd.read_csv("Wednesday-workingHours.pcap_ISCX.csv")
+df.columns = df.columns.str.strip()
+print(df.columns)
+y = df['Label']
+_, df, _, y_aux = train_test_split(df.drop(labels= 'Label', axis =1), y, test_size=0.05, stratify=y)
+df['Label'] = y_aux
+df, columnsName, y = dataset.preprocessing_CICS(df)
 SWARM_SIZE = 15
 MAX_ITERATIONS = 30
 component_1 = 2
@@ -50,7 +55,8 @@ def apply_pso(funct, particle, df, y):
     
     return particle
     
-for i in range(MAX_ITERATIONS):
+itter = 5
+for i in range(itter):
     print("Iteração:", i)
     #for particle in swarm:
     #    particle.velocity = pso.checkvelocity(globalbest=globalbest, particle=particle, inertia=INERTIA, c1=component_1, c2=component_2)
@@ -78,14 +84,14 @@ print(dataset.particle_choices(globalbest, columnsName, n_features=len(columnsNa
 print(len(dataset.particle_choices(globalbest,columnsName, n_features=len(columnsName))))
 swarm[0].position = globalbest
 
-optimal_x_train['class'] = optimal_y_train
-optimal_x_train = optimal_x_train.query('`class` == 0')
-optimal_x_train = optimal_x_train.drop(labels = 'class', axis = 1)
+optimal_x_train['Label'] = optimal_y_train
+optimal_x_train = optimal_x_train.query('`Label` == 0')
+optimal_x_train = optimal_x_train.drop(labels = 'Label', axis = 1)
 
-optimal_x_val['class'] = optimal_y_val
-benign_x_val_optimal = optimal_x_val[optimal_x_val['class']== 0]
-benign_x_val_optimal = benign_x_val_optimal.drop(labels = 'class', axis = 1)
-optimal_x_val = optimal_x_val.drop(labels = 'class', axis = 1)
+optimal_x_val['Label'] = optimal_y_val
+benign_x_val_optimal = optimal_x_val[optimal_x_val['Label']== 1]
+benign_x_val_optimal = benign_x_val_optimal.drop(labels = 'Label', axis = 1)
+optimal_x_val = optimal_x_val.drop(labels = 'Label', axis = 1)
 
 optimal_x_train, optimal_x_val, optimal_x_test, benign_x_val_optimal = dataset.transform_MinMaxScaler(optimal_x_train, optimal_x_val, optimal_x_test,benign_x_val_optimal)
 
