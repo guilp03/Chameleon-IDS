@@ -5,6 +5,7 @@ class Particle:
     pb_val: float # Melhor f1_score pessoal
     pos_val: float # Novo melhor f1_score após novo cálculo de velocidade
     index: int # Identificador único da partícula
+    pb_feat_number: int # Número de features selecionadas para a melhor posição da partícula
 
     def __init__(self, index: int, initial_position: list, funct: str, columnsName: list):
         self.velocity = [0] * (len(columnsName)+2) if funct == "rf" else [0] * (len(columnsName)+3)
@@ -12,4 +13,5 @@ class Particle:
         self.personal_best = initial_position
         self.pb_val = 0
         self.pos_val = 0
+        self.pb_feat_number = 0
         self.index = index

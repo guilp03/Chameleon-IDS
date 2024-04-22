@@ -10,8 +10,8 @@ import random
 #Importações de bibliotecas necessárias para executar o código
 
 #Define a função de fitness e carrega o conjunto de dados
-funct = "rf"
-df = pd.read_csv("./csv_result-KDDTrain+_20Percent (1).csv")
+funct = "gb"
+df = pd.read_csv("csv_result-KDDTrain+_20Percent.csv")
 #Remove as aspas simples dos nomes das colunas e elimina a coluna "id" do DataFrame.
 df.columns = df.columns.str.replace("'", "")
 df = df.drop(labels = 'id', axis = 1)
@@ -20,11 +20,12 @@ df, columnsName, y = dataset.preprocessing(df)
 #Define variáveis para configurar o algoritmo PSO, como tamanho do enxame, número máximo de iterações, e outros parâmetros.
 SWARM_SIZE = 15
 MAX_ITERATIONS = 30
-component_1 = 2
+component_1 = 1
 component_2 = 2
 INERTIA = 0.5
 globalbest = []
 globalbest_val = 0
+globalbest_feat_number = 0
 #Inicia a contagem do tempo de execução e cria uma lista vazia para armazenar as partículas do enxame.
 start_time = time.time()
 swarm = []
@@ -34,22 +35,38 @@ def process_particle(i, funct, columnsName, df, y):
     particle = part.Particle(i, inicial_position, funct=funct, columnsName=columnsName)
     particle.pb_val = pso.Evaluate_fitness(funct, particle, columnsName, df, y,particle.index, n_features=len(columnsName))
     particle.pos_val = particle.pb_val
+    particle.pb_feat_number= len(dataset.particle_choices(particle.position,columnsName, n_features=len(columnsName)))
     
     return particle
 #Gera o enxame inicial de partículas em paralelo usando a função process_particle definida anteriormente.
 swarm.extend(Parallel(n_jobs=-1)(delayed(process_particle)(i, funct, columnsName, df,y) for i in range(SWARM_SIZE)))
 
-
 #Inicializa a melhor posição global e o valor de fitness global com base nos valores iniciais das partículas.
-globalbest_val = max(p.pb_val for p in swarm)
-globalbest = max(swarm, key=lambda p: p.pb_val).position
+globalbest = swarm[0].position
+globalbest_val = swarm[0].pb_val
+globalbest_feat_number = swarm[0].pb_feat_number
+def Find_globalbest(globalbest, globalbest_val, globalbest_feat_number, swarm):
+    for i in range(1,SWARM_SIZE):
+        if swarm[i].pb_val > globalbest_val:
+            globalbest_val = swarm[i].pb_val
+            globalbest = swarm[i].position
+            globalbest_feat_number = swarm[i].pb_feat_number
+        elif swarm[i].pb_val == globalbest_val:
+            if swarm[i].pb_feat_number < globalbest_feat_number:
+                globalbest_val = swarm[i].pb_val
+                globalbest = swarm[i].position
+                globalbest_feat_number = swarm[i].pb_feat_number
+    return globalbest, globalbest_val, globalbest_feat_number
 
+globalbest, globalbest_val, globalbest_feat_number = Find_globalbest(globalbest=globalbest, globalbest_val=globalbest_val, globalbest_feat_number=globalbest_feat_number, swarm=swarm)
+print("globalbest: ", globalbest, globalbest_val, globalbest_feat_number)
 #Define uma função para aplicar o algoritmo PSO em cada partícula individualmente.
 def apply_pso(funct, particle, df, y):
     particle.velocity = pso.checkvelocity(globalbest=globalbest, particle=particle, inertia=INERTIA, c1 = component_1, c2 = component_2 )
     particle.position = pso.update_particle(particle, funct, n_features=len(columnsName))
     particle.pos_val = pso.Evaluate_fitness(funct,particle, columnsName, df, y,particle.index, n_features=len(columnsName))
     particle = pso.update_pb(particle) # Atualiza valor de personal best (ignorar return)
+    particle.pb_feat_number= len(dataset.particle_choices(particle.position,columnsName, n_features=len(columnsName)))
     
     return particle
 #Executa o algoritmo PSO por um número máximo de iterações, atualizando a posição e o personal best de cada partícula em paralelo.
@@ -57,10 +74,8 @@ for i in range(MAX_ITERATIONS):
     print("Iteração:", i)
     swarm = Parallel(n_jobs=-1)(delayed(apply_pso)(funct, particle, df, y) for particle in swarm)
 
-    if max(p.pb_val for p in swarm) > globalbest_val:
-        globalbest_val = max(p.pb_val for p in swarm)
-        globalbest = max(swarm, key=lambda p: p.pb_val).position
-    print(globalbest)
+    globalbest, globalbest_val, globalbest_feat_number = Find_globalbest(globalbest=globalbest, globalbest_val=globalbest_val, globalbest_feat_number=globalbest_feat_number, swarm=swarm)
+    print("globalbest: ", globalbest, globalbest_val, globalbest_feat_number)
 # Define a solução ótima com base na melhor posição global encontrada pelo PSO.
 optimal_solution = globalbest
 #Obtém os subconjuntos ótimos de treinamento, validação e teste com base na solução ótima encontrada pelo PSO.

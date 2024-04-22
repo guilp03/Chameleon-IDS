@@ -68,7 +68,7 @@ def Evaluate_fitness(funct: str, particle: Particle, ColumnsName: list[str], df:
     # Selecionar as colunas apropriadas
         gb_model = gb.GradientBoost(x_train_selected, y_train, particle.position[-2], particle.position[-1])
         accuracy_gb, f1_gb, precision_gb, recall_gb = gb.get_metrics(gb_model, x_val_selected, y_val)
-        #print(particle.position)
+        f1_gb = round(f1_gb, 4)
         print(i,'accuracy:', accuracy_gb,'f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb)
         return f1_gb
     else:
@@ -76,6 +76,8 @@ def Evaluate_fitness(funct: str, particle: Particle, ColumnsName: list[str], df:
         rf_model = rf.RandomForest(n_features, x_train_selected, y_train,particle.position[-1])
         accuracy_rf, f1_rf, precision_rf, recall_rf = rf.get_metrics(rf_model, x_val_selected, y_val)
         print(particle.position)
+        f1_rf = round(f1_rf, 4)
+
         print(i,'accuracy:', accuracy_rf,'f1_score:',f1_rf, 'precision:', precision_rf, 'recall:', recall_rf)
         return f1_rf
     
@@ -141,6 +143,7 @@ def inteiro(particle: Particle, funct: str, n_features: int):
     if funct == "gb":
         particle.position[-2] = int(np.clip(particle.position[-2], 50, 1000))
         particle.position[-1] = np.clip(particle.position[-1], 0.1, 0.3)
+        particle.position[-1] = round(particle.position[-1], 4)
         
     for m in range(1, n_features + 1):
         if particle.position[m]>0.5:
