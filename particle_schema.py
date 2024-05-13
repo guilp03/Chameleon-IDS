@@ -6,6 +6,7 @@ class Particle:
     pos_val: float # Novo melhor f1_score após novo cálculo de velocidade
     index: int # Identificador único da partícula
     pb_feat_number: int # Número de features selecionadas para a melhor posição da partícula
+    distance: float # Distância Euclidiana da partícula para as demais no enxame
 
     def __init__(self, index: int, initial_position: list, funct: str, columnsName: list):
         self.velocity = [0] * (len(columnsName)+2) if funct == "rf" else [0] * (len(columnsName)+3)
@@ -15,3 +16,4 @@ class Particle:
         self.pos_val = 0
         self.pb_feat_number = 0
         self.index = index
+        self.distance = 0
