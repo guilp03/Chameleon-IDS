@@ -11,6 +11,7 @@ import random
 
 #Define a função de fitness e carrega o conjunto de dados
 funct = "gb"
+alpha = 0.9
 df = pd.read_csv("csv_result-KDDTrain+_20Percent.csv")
 #Remove as aspas simples dos nomes das colunas e elimina a coluna "id" do DataFrame.
 df.columns = df.columns.str.replace("'", "")

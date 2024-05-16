@@ -69,8 +69,10 @@ def Evaluate_fitness(funct: str, particle: Particle, ColumnsName: list[str], df:
         gb_model = gb.GradientBoost(x_train_selected, y_train, particle.position[-2], particle.position[-1])
         accuracy_gb, f1_gb, precision_gb, recall_gb = gb.get_metrics(gb_model, x_val_selected, y_val)
         f1_gb = round(f1_gb, 4)
+        feat_number= len(dataset.particle_choices(particle.position,ColumnsName, n_features=len(ColumnsName)))
         print(i,'accuracy:', accuracy_gb,'f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb)
-        return f1_gb
+        fitness = round(0.7 * f1_gb + 0.3 * (1- (feat_number / n_features)), 4)
+        return  fitness
     else:
         # Selecionar as colunas apropriadas
         rf_model = rf.RandomForest(n_features, x_train_selected, y_train,particle.position[-1])
