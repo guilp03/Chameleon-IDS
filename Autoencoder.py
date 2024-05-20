@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from sklearn.metrics import confusion_matrix
+import random
 
 #CLASSE QUE DEFINE O EARLY STOP, BASEADA NO CÓDIGO APRESENTADO NA AULA DE AUTOENCODERS
 class EarlyStopping:
@@ -127,7 +128,8 @@ class Autoencoder(nn.Module):
           break
 
     if self.early_stopping is not None:
-      self = torch.load('checkpoint.pt')
+     # self = torch.load('checkpoint.pt')
+     pass
     self.eval()
     return train_avg_losses, val_avg_losses
   
@@ -153,3 +155,75 @@ def get_overall_metrics(y_true, y_pred):
   f1 = (2*tpr*precision)/(tpr+precision)
   recall = tp/(tp+fn)
   return {'accuracy':accuracy,'tpr':tpr,'fpr':fpr,'precision':precision,'f1-score':f1, 'recall':recall}
+
+def optimize_autoencoder_hyperparameters(IN_FEATURES, x_train_tensor, x_val_tensor_benign, x_val, y_val ):
+    # Definir intervalos para os hiperparâmetros
+    hyperparameter_ranges = {
+        'BATCH_SIZE': [16],
+        'ALPHA': [1e-3,1e-2, 1e-1],
+        'PATIENCE': [10],
+        'DELTA': [0.0001],
+        'NUM_EPOCHS': [1000],
+        'DROPOUT_RATE': [0.5],
+        'REGULARIZER': [1e-4, 1e-3, 1e-2]
+    }
+
+    # Definir o número de iterações da busca aleatória
+    num_iterations = 20
+
+    # Melhores hiperparâmetros e seu desempenho
+    best_hyperparameters = {}
+    best_f1_score = float('-inf')
+
+    for m in range(num_iterations):
+        print("iteração:", m)
+        # Amostrar hiperparâmetros aleatoriamente dentro dos intervalos especificados
+        hyperparameters = {param: random.choice(values) for param, values in hyperparameter_ranges.items()}
+
+        # Configurar e treinar o modelo com os hiperparâmetros amostrados
+        ae_model = Autoencoder(IN_FEATURES, hyperparameters['DROPOUT_RATE'])
+        ae_model.compile(learning_rate=hyperparameters['ALPHA'], weight_decay=hyperparameters['REGULARIZER'])
+
+        train_avg_losses, val_avg_losses = ae_model.fit(x_train_tensor,
+                                                        hyperparameters['NUM_EPOCHS'],
+                                                        hyperparameters['BATCH_SIZE'],
+                                                        X_val=x_val_tensor_benign,
+                                                        patience=hyperparameters['PATIENCE'],
+                                                        delta=hyperparameters['DELTA'])
+
+        # Avaliar o desempenho do modelo usando o F1-score
+        val_anomaly_scores = get_autoencoder_anomaly_scores(ae_model, x_val)
+
+        lista_arrays = [float(i) for i in range(1, 5000)]  # Gerar números inteiros de 1 a 90
+        lista_arrays = [x / 1000 for x in lista_arrays]
+        lista_f1 = []
+        best_f1 = 0.0
+        best_thresh = 0.0   
+        for i in lista_arrays:
+            metrics = get_overall_metrics(y_val, val_anomaly_scores > i)
+            f1_score = metrics['f1-score']
+            precision = metrics['precision']
+            accuracy = metrics['accuracy']
+            tpr = metrics['tpr']
+            fpr = metrics['fpr']
+            recall = metrics['recall']
+            lista_f1.append(f1_score)
+            if f1_score > best_f1 and tpr > 0.0:
+                best_f1 = f1_score
+                best_thresh = i
+        print("Melhor Threshold:", best_thresh)
+        print("Melhor F1-score:", best_f1)
+
+
+        # Atualizar os melhores hiperparâmetros se o desempenho atual for melhor
+        if best_f1 > best_f1_score:
+            best_threshold = best_thresh
+            best_precision = precision
+            best_accuracy = accuracy
+            best_tpr = tpr
+            best_fpr = fpr
+            best_recall = recall
+            best_f1_score = best_f1
+            best_hyperparameters = hyperparameters
+
+    return best_threshold,best_hyperparameters, best_f1_score,best_fpr,best_tpr,best_accuracy,best_precision, best_recall
