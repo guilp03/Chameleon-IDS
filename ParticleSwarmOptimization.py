@@ -32,16 +32,16 @@ def Search_Space(funct: str, n_features: int):
     initial_position = []
     initial_position.append(random.uniform(0.1, 0.4)) # Train-test-split
     for i in range(n_features):
-        item = random.choice(tuple(column_choice))
+        item = random.randint(0, 1)
         initial_position.append(item)
     if funct == "gb":
-        initial_position.append(random.randint(50, 1000))
-        initial_position.append(random.uniform(0.1, 0.3))
+        initial_position.append(random.randint(100, 400))
+        initial_position.append(random.uniform(0.05, 0.3))
     if funct == "rf":
         initial_position.append(random.randint(50, 600))
+        print(initial_position)
     return initial_position
 
-    return initial_position
 
 def Evaluate_fitness(funct: str, particle: Particle, ColumnsName: list[str], df: pd.DataFrame, y: pd.DataFrame, i: int, n_features: int | None =None):
     """ Função para calcular o f1_score de uma partícula
@@ -70,8 +70,10 @@ def Evaluate_fitness(funct: str, particle: Particle, ColumnsName: list[str], df:
         accuracy_gb, f1_gb, precision_gb, recall_gb = gb.get_metrics(gb_model, x_val_selected, y_val)
         f1_gb = round(f1_gb, 4)
         feat_number= len(dataset.particle_choices(particle.position,ColumnsName, n_features=len(ColumnsName)))
-        print(i,'accuracy:', accuracy_gb,'f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb)
-        fitness = round(0.7 * f1_gb + 0.3 * (1- (feat_number / n_features)), 4)
+        print(feat_number)
+        fitness = round(0.8 * f1_gb + 0.2 * (1- (feat_number / n_features)), 4)
+        print(particle.position)
+        print(i,'accuracy:', accuracy_gb,'f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb, 'Features:', feat_number, "fitness:", fitness)
         return  fitness
     else:
         # Selecionar as colunas apropriadas
@@ -143,15 +145,15 @@ def inteiro(particle: Particle, funct: str, n_features: int):
     if funct == "rf":
         particle.position[-1] = int(np.clip(particle.position[-1], 50, 1000))
     if funct == "gb":
-        particle.position[-2] = int(np.clip(particle.position[-2], 50, 1000))
-        particle.position[-1] = np.clip(particle.position[-1], 0.1, 0.3)
+        particle.position[-2] = int(np.clip(particle.position[-2], 100, 400))
+        particle.position[-1] = np.clip(particle.position[-1], 0.05, 0.3)
         particle.position[-1] = round(particle.position[-1], 4)
         
     for m in range(1, n_features + 1):
-        if particle.position[m]>0.5:
-            particle.position[m]=1
-        else:
+        if particle.position[m]<0.5:
             particle.position[m]=0
+        if particle.position[m] >= 0.5:
+            particle.position[m]=1
             
     return particle.position
 

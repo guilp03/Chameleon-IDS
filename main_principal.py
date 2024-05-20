@@ -7,6 +7,9 @@ import torch
 import Autoencoder as ae
 from joblib import Parallel, delayed
 import random
+
+
+
 #Importações de bibliotecas necessárias para executar o código
 
 #Define a função de fitness e carrega o conjunto de dados
@@ -18,11 +21,14 @@ df.columns = df.columns.str.replace("'", "")
 df = df.drop(labels = 'id', axis = 1)
 #Pré-processa o conjunto de dados usando a função preprocessing do módulo dataset, que realiza várias etapas de limpeza e preparação dos dados.
 df, columnsName, y = dataset.preprocessing(df)
+
+
+
 #Define variáveis para configurar o algoritmo PSO, como tamanho do enxame, número máximo de iterações, e outros parâmetros.
 SWARM_SIZE = 15
-MAX_ITERATIONS = 30
-component_1 = 1
-component_2 = 2
+MAX_ITERATIONS = 8
+component_1 = 2
+component_2 = 1
 INERTIA = 0.5
 globalbest = []
 globalbest_val = 0
@@ -81,8 +87,9 @@ for i in range(MAX_ITERATIONS):
 optimal_solution = globalbest
 #Obtém os subconjuntos ótimos de treinamento, validação e teste com base na solução ótima encontrada pelo PSO.
 optimal_x_train, optimal_x_val, optimal_x_test, optimal_y_train, optimal_y_val, optimal_y_test = dataset.get_optimal_subesets(df, optimal_solution, columnsName, y, optimal_solution[0], n_features=len(columnsName))   
-     
+
 end_time = time.time()
+
 dataset.get_time(start_time, end_time)
 print(dataset.particle_choices(globalbest, columnsName, n_features=len(columnsName)))
 print(len(dataset.particle_choices(globalbest,columnsName, n_features=len(columnsName))))
@@ -107,17 +114,17 @@ start_time = time.time()
 def optimize_autoencoder_hyperparameters(IN_FEATURES):
     # Definir intervalos para os hiperparâmetros
     hyperparameter_ranges = {
-        'BATCH_SIZE': [16,32,64,128],
-        'ALPHA': [1e-4,1e-3,1e-2,9.6e-2, 1e-1],
+        'BATCH_SIZE': [16,32,64],
+        'ALPHA': [1e-3,1e-2, 1e-1],
         'PATIENCE': [10],
         'DELTA': [0.0001],
         'NUM_EPOCHS': [1000],
         'DROPOUT_RATE': [0.5],
-        'REGULARIZER': [1e-4, 1e-3, 1e-2, 1e-1]
+        'REGULARIZER': [1e-4, 1e-3, 1e-2]
     }
 
     # Definir o número de iterações da busca aleatória
-    num_iterations = 80
+    num_iterations = 20
 
     # Melhores hiperparâmetros e seu desempenho
     best_hyperparameters = {}
@@ -206,3 +213,14 @@ print("Métricas da melhor particula no ensemble","XGboost" if funct == "gb" els
 print("Foi separado", swarm[0].position[0], "do dataset para teste e validação e os valores de learning rate e número de árvores foi de", swarm[0].position[-2], swarm[0].position[-1])
 print("hiperparâmetros do Autoencoder", best_hyperparameters,"e threshold",best_threshold)
 print("metricas do Autoencoder:", "f1_score:", metrics['f1-score'], "precision:", metrics['precision'], "accuracy:", metrics['accuracy'],"recall:", metrics['recall'] ,"tpr:", metrics['tpr'], "fpr:", metrics['fpr'])
+
+"""Tempo de execução: 0 horas, 7 minutos e 7 segundos
+Features Esolhidas:  ['protocol_type', 'flag', 'src_bytes', 'num_compromised', 'root_shell', 'num_file_creations', 'is_guest_login', 'count', 'srv_count', 'same_srv_rate', 'diff_srv_rate', 'dst_host_srv_count', 'dst_host_srv_serror_rate', 'dst_host_rerror_rate']
+14 no total
+14
+[0.13815775524264906, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 349, 0.131]
+0 accuracy: 0.9968399885090491 f1_score: 0.9966 precision: 0.9975308641975309 recall: 0.9956869993838571 Features: 14 fitness: 0.929
+Métricas da melhor particula no ensemble XGboost 0.929
+Foi separado 0.13815775524264906 do dataset para teste e validação e os valores de learning rate e número de árvores foi de 349 0.131
+hiperparâmetros do Autoencoder {'BATCH_SIZE': 16, 'ALPHA': 0.1, 'PATIENCE': 10, 'DELTA': 0.0001, 'NUM_EPOCHS': 1000, 'DROPOUT_RATE': 0.5, 'REGULARIZER': 0.0001} e threshold 0.058
+metricas do Autoencoder: f1_score: 0.8504504504504505 precision: 0.8300117233294255 accuracy: 0.8569787478460654 recall: 0.8719211822660099 tpr: 0.8719211822660099 fpr: 0.15608180839612487"""
