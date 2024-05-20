@@ -17,3 +17,5 @@ class Particle:
         self.pb_feat_number = 0
         self.index = index
         self.distance = 0
+        self.threshold = 0.0
+        self.hyperparameters = {}

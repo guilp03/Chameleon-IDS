@@ -215,7 +215,7 @@ def get_optimal_subesets(df, optimal_solution, columnsName, y, test_size, n_feat
     return x_train_selected, x_val_selected, x_test_selected, y_train, y_val, y_test
 
 
-def transform_MinMaxScaler(x_train, x_val, x_test, benign_x_train):
+def transform_MinMaxScaler(x_train, x_val, benign_x_train):
     # Cria uma instância do MinMaxScaler
     minmax_scaler = MinMaxScaler()
     
@@ -225,11 +225,11 @@ def transform_MinMaxScaler(x_train, x_val, x_test, benign_x_train):
     # Aplica o escalonamento Min-Max aos dados 
     x_train = minmax_scaler.transform(x_train)
     x_val = minmax_scaler.transform(x_val)
-    x_test = minmax_scaler.transform(x_test)
+    #x_test = minmax_scaler.transform(x_test)
     benign_x_train = minmax_scaler.transform(benign_x_train)
     
     # Retorna os dados escalonados
-    return x_train, x_val, x_test, benign_x_train
+    return x_train, x_val, benign_x_train
 
 
 def get_time(start_time, end_time):
