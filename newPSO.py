@@ -3,6 +3,8 @@ import RandomForest as rf
 import XGBoost as gb
 import dataset
 import numpy as np
+import torch
+import Autoencoder as ae
 #random.seed(42)
 #np.random.seed(42)
 
@@ -62,20 +64,34 @@ def Evaluate_fitness(funct: str, particle: Particle, ColumnsName: list[str], df:
     # Selecionando as colunas da partícula
     particle_choices = dataset.particle_choices(particle.position, ColumnsName, n_features)
     x_train, y_train, x_val, y_val = split_train_test(df, ColumnsName, y, particle.position[0])
+    x_train['class'] = y_train
+    x_train = x_train.query('`class` == 0')
+    x_train = x_train.drop(labels = 'class', axis = 1)
+#    Prepara os dados de validação apenas para a classe negativa (classe 0).
+    x_val['class'] = y_val
+    benign_x_val = x_val[x_val['class']== 0]
+    benign_x_val = benign_x_val.drop(labels = 'class', axis = 1)
+    x_val = x_val.drop(labels = 'class', axis = 1)
+    
     x_train_selected = x_train[particle_choices]
     x_val_selected = x_val[particle_choices]
+    benign_x_val_selected = benign_x_val[particle_choices]
+    x_train, x_val, benign_x_val = dataset.transform_MinMaxScaler(x_train_selected,x_val_selected, benign_x_val_selected)
+    benign_x_val_tensor = torch.FloatTensor(benign_x_val)
+    x_train_tensor = torch.FloatTensor(x_train)
+    feat_number= len(dataset.particle_choices(particle.position,ColumnsName, n_features=len(ColumnsName)))
+
     if funct == "gb":
     # Selecionar as colunas apropriadas
         gb_model = gb.GradientBoost(x_train_selected, y_train, particle.position[-2], particle.position[-1])
         accuracy_gb, f1_gb, precision_gb, recall_gb = gb.get_metrics(gb_model, x_val_selected, y_val)
         f1_gb = round(f1_gb, 4)
-        feat_number= len(dataset.particle_choices(particle.position,ColumnsName, n_features=len(ColumnsName)))
         print(feat_number)
-        fitness = round(weighting_factor * f1_gb + (1 - weighting_factor) * (1- (feat_number / n_features)), 4)
+        fitness = round(0.8 * f1_gb + 0.2 * (1- (feat_number / n_features)), 4)
         print(particle.position)
         print(i,'accuracy:', accuracy_gb,'f1_score:',f1_gb, 'precision:', precision_gb, 'recall:', recall_gb, 'Features:', feat_number, "fitness:", fitness)
-        return  fitness
-    else:
+        return  fitness, 0.0
+    elif funct == 'rf':
         # Selecionar as colunas apropriadas
         rf_model = rf.RandomForest(n_features, x_train_selected, y_train,particle.position[-1])
         accuracy_rf, f1_rf, precision_rf, recall_rf = rf.get_metrics(rf_model, x_val_selected, y_val)
@@ -83,7 +99,17 @@ def Evaluate_fitness(funct: str, particle: Particle, ColumnsName: list[str], df:
         f1_rf = round(f1_rf, 4)
 
         print(i,'accuracy:', accuracy_rf,'f1_score:',f1_rf, 'precision:', precision_rf, 'recall:', recall_rf)
-        return f1_rf
+        return f1_rf, 0.0
+    elif funct == 'ae':
+        best_threshold ,best_hyperparameters, best_f1_score,best_fpr,best_tpr,best_accuracy,best_precision, best_recall = ae.optimize_autoencoder_hyperparameters(IN_FEATURES=x_train.shape[1], x_train_tensor=x_train_tensor,x_val_tensor_benign=benign_x_val_tensor,x_val=x_val, y_val=y_val )
+       
+        print(particle.position)
+        print("Melhores hiperparâmetros:", best_hyperparameters)
+        print("Melhor F1-score:", best_f1_score) 
+        print(feat_number, "Features")
+        fitness = round(weighting_factor * best_f1_score + weighting_factor * (1- (feat_number / n_features)), 4)
+        print("metricas:", "f1_score:", best_f1_score, "precision:", best_precision, "accuracy:", best_accuracy, "tpr:", best_tpr, "fpr:", best_fpr,"recall" ,best_recall)
+        return fitness, best_threshold, best_hyperparameters
     
 
 def convergence_factors (a: float, c: float):
