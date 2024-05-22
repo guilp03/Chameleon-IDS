@@ -108,7 +108,7 @@ def find_leaders(swarm, swarmsize = SWARM_SIZE):
     globalbest_feat_number = swarm[0].pb_feat_number
 
     # Encontrando o líder alpha
-    X_alpha, _, _ = Find_globalbest(globalbest=globalbest, globalbest_val=globalbest_val, globalbest_feat_number=globalbest_feat_number, swarm=swarm, swarmsize=swarmsize)
+    X_alpha, _, _,_,_ = Find_globalbest(globalbest=globalbest, globalbest_val=globalbest_val, globalbest_feat_number=globalbest_feat_number, swarm=swarm, swarmsize=swarmsize)
 
 
     # Encontrando o líder beta (maior líder tirando alpha)
@@ -118,7 +118,7 @@ def find_leaders(swarm, swarmsize = SWARM_SIZE):
         if i != alpha_index:
             swarm_temp.append(swarm[i])
 
-    X_beta, _, _ = Find_globalbest(globalbest=globalbest, globalbest_val=globalbest_val, globalbest_feat_number=globalbest_feat_number, swarm=swarm_temp, swarmsize = swarmsize - 1)
+    X_beta, _, _,_,_ = Find_globalbest(globalbest=globalbest, globalbest_val=globalbest_val, globalbest_feat_number=globalbest_feat_number, swarm=swarm_temp, swarmsize = swarmsize - 1)
 
     # Encontrando o líder delta (terceiro maior líder)
     beta_index = X_beta.index
@@ -126,7 +126,7 @@ def find_leaders(swarm, swarmsize = SWARM_SIZE):
     for particle in swarm_temp:
         if particle.index != beta_index:
             swarm_temp2.append(swarm[i])
-    X_delta, _, _ = Find_globalbest(globalbest=globalbest, globalbest_val=globalbest_val, globalbest_feat_number=globalbest_feat_number, swarm=swarm_temp, swarmsize = swarmsize - 2)
+    X_delta, _, _,_,_ = Find_globalbest(globalbest=globalbest, globalbest_val=globalbest_val, globalbest_feat_number=globalbest_feat_number, swarm=swarm_temp, swarmsize = swarmsize - 2)
 
     return X_alpha, X_beta, X_delta
 
@@ -143,9 +143,10 @@ for i in range(MAX_ITERATIONS):
 
     # Salvando valor atual de globalbest para posterior atualização do m
     curr_globalbest = globalbest_val
-
+    k = 0
     for particle in swarm:
-        particle = apply_pso(funct,particle, df, y)
+        particle = apply_pso(funct,particle, df, y, c, X_alpha, X_beta, X_delta, k)
+        k+=1
     globalbest, globalbest_val, globalbest_feat_number,globalbest_threshold, globalbest_hyperparameters = Find_globalbest(globalbest=globalbest, globalbest_val=globalbest_val, globalbest_feat_number=globalbest_feat_number, swarm=swarm)
     print("globalbest: ", globalbest.position, globalbest_val, globalbest_feat_number,globalbest_threshold)
 

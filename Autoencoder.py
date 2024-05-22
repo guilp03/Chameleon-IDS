@@ -143,7 +143,7 @@ def get_overall_metrics(y_true, y_pred):
 
 def optimize_autoencoder_hyperparameters(IN_FEATURES, x_train_tensor, x_val_tensor_benign, x_val, y_val):
     hyperparameter_ranges = {
-        'BATCH_SIZE': [32, 64],
+        'BATCH_SIZE': [16,32, 64],
         'ALPHA': [1e-2, 1e-1],
         'PATIENCE': [10],
         'DELTA': [0.0001],
@@ -152,7 +152,7 @@ def optimize_autoencoder_hyperparameters(IN_FEATURES, x_train_tensor, x_val_tens
         'REGULARIZER': [1e-3, 1e-2]
     }
 
-    num_iterations = 8
+    num_iterations = 12
     best_hyperparameters = {}
     best_f1_score = float('-inf')
 
