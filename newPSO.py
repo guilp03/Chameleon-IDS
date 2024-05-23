@@ -76,7 +76,7 @@ def Evaluate_fitness(funct: str, particle: Particle, ColumnsName: list[str], df:
     x_train_selected = x_train[particle_choices]
     x_val_selected = x_val[particle_choices]
     benign_x_val_selected = benign_x_val[particle_choices]
-    x_train, x_val, benign_x_val = dataset.transform_MinMaxScaler(x_train_selected,x_val_selected, benign_x_val_selected)
+    x_train, x_val, benign_x_val = dataset.apply_MinMaxScaler([x_train_selected,x_val_selected, benign_x_val_selected])
     benign_x_val_tensor = torch.FloatTensor(benign_x_val)
     x_train_tensor = torch.FloatTensor(x_train)
     feat_number= len(dataset.particle_choices(particle.position,ColumnsName, n_features=len(ColumnsName)))
@@ -173,6 +173,10 @@ def checkvelocity(globalbest: list, particle: Particle, inertia: float, c: float
     x1, x2, x3 = leadership(particle, X_alpha, X_beta, X_delta, curr_iteration, num_iterations, c)
 
     r4 = random.random()
+
+    print(inertia_array)
+
+    print(particle.velocity)
 
     velocity = (inertia_array * particle.velocity +
                 (c/2) * r4 * (x1 - particle.position) + # Influência do líder alpha

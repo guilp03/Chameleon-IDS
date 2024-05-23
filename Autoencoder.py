@@ -152,7 +152,7 @@ def optimize_autoencoder_hyperparameters(IN_FEATURES, x_train_tensor, x_val_tens
         'REGULARIZER': [1e-3, 1e-2]
     }
 
-    num_iterations = 12
+    num_iterations = 8
     best_hyperparameters = {}
     best_f1_score = float('-inf')
 

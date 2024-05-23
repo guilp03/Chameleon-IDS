@@ -231,6 +231,27 @@ def transform_MinMaxScaler(x_train, x_val, benign_x_train):
     # Retorna os dados escalonados
     return x_train, x_val, benign_x_train
 
+def apply_MinMaxScaler(df_list: list[pd.DataFrame]):
+    """ Recebe uma lista de dataframes e retorna uma lista com os respectivos dataframes no transformados
+    
+    Args:
+
+        df_list (list[pd.DataFrame]) : Lista de datasets a serem transformados
+
+    Returns:
+
+        transformed_df_list (list[pd.DataFrame]) : Lista de datasets transformados
+    
+    """
+    transformed_df_list = []
+    minmax_scaler = MinMaxScaler()
+    minmax_scaler = minmax_scaler.fit(df_list[0])
+
+    for df in df_list:
+        df = minmax_scaler.transform(df)
+        transformed_df_list.append(df)
+    
+    return transformed_df_list
 
 def get_time(start_time, end_time):
     

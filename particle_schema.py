@@ -9,7 +9,7 @@ class Particle:
     distance: float # Distância Euclidiana da partícula para as demais no enxame
 
     def __init__(self, index: int, initial_position: list, funct: str, columnsName: list):
-        self.velocity = [0] * (len(columnsName)+2) if funct == "rf" else [0] * (len(columnsName)+3)
+        self.velocity = [0] * (len(columnsName)+2) if funct == "rf" else [0] * (len(columnsName) + 1)
         self.position = initial_position
         self.personal_best = initial_position
         self.pb_val = 0
