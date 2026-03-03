@@ -1,2 +1,4 @@
 # Ignore arquivos CSV
 *.csv
+*.claude
+CLAUDE.MD
