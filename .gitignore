@@ -1,4 +1,23 @@
-# Ignore arquivos CSV
+# Datasets
 *.csv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Checkpoints e artefatos de treino
+checkpoint.pt
+
+# IDEs e ferramentas
+.claude
 *.claude
-CLAUDE.MD
+.vscode/
+.idea/
+
+# Ambiente virtual
+venv/
+.venv/
+env/
