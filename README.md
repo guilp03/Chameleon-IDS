@@ -40,10 +40,10 @@ O PSO encontra o subconjunto de features e os hiperparâmetros que maximizam o F
 ## Requisitos
 
 - Python 3.10+
-- As dependências listadas abaixo
+- As dependências listadas no arquivo requirements.txt
 
 ```bash
-pip install pandas numpy scikit-learn torch joblib tqdm pytest
+pip install -r requirements.txt
 ```
 
 ---
@@ -53,7 +53,7 @@ pip install pandas numpy scikit-learn torch joblib tqdm pytest
 ```bash
 git clone https://github.com/guilp03/Chameleon-IDS.git
 cd Chameleon-IDS
-pip install pandas numpy scikit-learn torch joblib tqdm pytest
+pip install -r requirements.txt
 ```
 
 ---
