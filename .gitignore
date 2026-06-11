@@ -17,6 +17,8 @@ checkpoint.pt
 .vscode/
 .idea/
 .opencode/
+AGENTS.md
+paper-plan.md
 
 # Ambiente virtual
 venv/
