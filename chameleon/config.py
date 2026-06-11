@@ -1,7 +1,4 @@
 """Configurações centralizadas do Chameleon-IDS.
-
-Substitui todos os magic numbers espalhados pelo código por dataclasses
-tipadas e documentadas.
 """
 from dataclasses import dataclass, field
 

@@ -16,6 +16,7 @@ checkpoint.pt
 *.claude
 .vscode/
 .idea/
+.opencode/
 
 # Ambiente virtual
 venv/

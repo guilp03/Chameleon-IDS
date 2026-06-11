@@ -1,6 +1,6 @@
 # Chameleon-IDS
 
-> Sistema de Detecção de Intrusão baseado em **PSO** para seleção automática de features + **Autoencoder** para detecção de anomalias de rede.
+> Sistema de Detecção de Intrusão baseado em **PSO adaptado para espaço misto contínuo-binário** para seleção automática de features + **Autoencoder** para detecção de anomalias de rede.
 
 ---
 
@@ -35,6 +35,8 @@ Dataset NSL-KDD
 
 O PSO encontra o subconjunto de features e os hiperparâmetros que maximizam o F1-score do ensemble. O Autoencoder, treinado nessa seleção ótima, aprende o padrão do tráfego normal e rejeita o que foge dele.
 
+> **Nota sobre o PSO:** a partícula codifica simultaneamente variáveis de tipos distintos (contínuo, inteiro e binário). As features são atualizadas com velocidade contínua e depois discretizadas por threshold (`> 0.5 → 1`, senão `0`). Em caso de empate no F1-score, o desempate favorece a solução com **menor número de features** (critério multi-objetivo). Essas adaptações são próprias do projeto e não estão presentes no PSO clássico original.
+
 ---
 
 ## Requisitos
@@ -66,7 +68,8 @@ Os datasets não estão incluídos no repositório por excederem o limite de tam
 |---------|------|-----------------|
 | **NSL-KDD** *(principal)* | [Kaggle](https://www.kaggle.com/datasets/hassan06/nslkdd) | `csv_result-KDDTrain+_20Percent.csv` |
 | CICIDS2017 | [Kaggle](https://www.kaggle.com/datasets/cicdataset/cicids2017) | — |
-| UNSW-NB15 | [Kaggle](https://www.kaggle.com/datasets/mrwellsdavid/unsw-nb15/code) | — |
+
+> O `main.py` executa o pipeline para **NSL-KDD** por padrão. Para usar o CICIDS2017, é necessário alterar a chamada de pré-processamento em `main.py` de `data.preprocess_nslkdd(df)` para `data.preprocess_cicids(df)`.
 
 ---
 
