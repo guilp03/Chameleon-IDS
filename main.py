@@ -16,6 +16,7 @@ from joblib import Parallel, delayed
 
 import chameleon.data.preprocessing as data
 import chameleon.pso.optimizer as pso
+import chameleon.pso.gwo_optimizer as gwo
 from chameleon.config import ModelBounds, PSOConfig
 from chameleon.models import autoencoder as ae
 from chameleon.pso.particle import Particle
@@ -33,6 +34,7 @@ def main() -> None:
     # Configuração
     # ------------------------------------------------------------------
     ensemble_type = "gb"  # "gb" = GradientBoosting, "rf" = RandomForest
+    optimizer_type = "pso"  # "pso" = clássico, "gwo" = PSO híbrido com GWO
     cfg = PSOConfig()
 
     # ------------------------------------------------------------------
@@ -53,6 +55,7 @@ def main() -> None:
     df, column_names, y = data.preprocess_nslkdd(df)
     n_features = len(column_names)
     logger.info("Dataset carregado. Features: %d, Amostras: %d", n_features, len(df))
+    logger.info("Optimizer: %s", optimizer_type.upper())
 
     # ------------------------------------------------------------------
     # Inicialização do enxame PSO
@@ -108,14 +111,34 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Iterações do PSO
     # ------------------------------------------------------------------
-    def apply_pso(particle: Particle) -> Particle:
-        particle.velocity = pso.check_velocity(
-            globalbest=globalbest,
-            particle=particle,
-            inertia=cfg.inertia,
-            c1=cfg.cognitive_param,
-            c2=cfg.social_param,
-        )
+    def apply_pso(
+        particle: Particle,
+        X_alpha: Particle | None = None,
+        X_beta: Particle | None = None,
+        X_delta: Particle | None = None,
+        c: float = 0.0,
+        curr_iter: int = 0,
+    ) -> Particle:
+        if optimizer_type == "gwo":
+            particle.velocity = gwo.check_velocity(
+                globalbest=globalbest,
+                particle=particle,
+                inertia=cfg.inertia,
+                c=c,
+                X_alpha=X_alpha,
+                X_beta=X_beta,
+                X_delta=X_delta,
+                curr_iteration=curr_iter,
+                num_iterations=cfg.max_iterations,
+            )
+        else:
+            particle.velocity = pso.check_velocity(
+                globalbest=globalbest,
+                particle=particle,
+                inertia=cfg.inertia,
+                c1=cfg.cognitive_param,
+                c2=cfg.social_param,
+            )
         particle.position = pso.update_particle(particle, ensemble_type, n_features=n_features)
         particle.pos_val = pso.evaluate_fitness(
             ensemble_type, particle, column_names, df, y, particle.index, n_features=n_features
@@ -126,13 +149,38 @@ def main() -> None:
         )
         return particle
 
-    for iteration in range(cfg.max_iterations):
-        logger.info("Iteração PSO: %d/%d", iteration + 1, cfg.max_iterations)
-        swarm = list(Parallel(n_jobs=-1)(delayed(apply_pso)(p) for p in swarm))
-        globalbest, globalbest_val, globalbest_feat_number = find_globalbest(
-            globalbest, globalbest_val, globalbest_feat_number, swarm
-        )
-        logger.info("globalbest: val=%.4f, features=%d", globalbest_val, globalbest_feat_number)
+    if optimizer_type == "gwo":
+        # Loop GWO com líderes alpha/beta/delta e contador m
+        m = 0
+        for iteration in range(cfg.max_iterations):
+            logger.info("Iteração GWO: %d/%d", iteration + 1, cfg.max_iterations)
+            X_alpha, X_beta, X_delta = gwo.find_leaders(
+                swarm, globalbest_val, globalbest_feat_number
+            )
+            c = (m / cfg.max_iterations) ** (2 / 3) + 1
+            curr_globalbest = globalbest_val
+            swarm = list(
+                Parallel(n_jobs=-1)(
+                    delayed(apply_pso)(p, X_alpha, X_beta, X_delta, c, iteration)
+                    for p in swarm
+                )
+            )
+            globalbest, globalbest_val, globalbest_feat_number = find_globalbest(
+                globalbest, globalbest_val, globalbest_feat_number, swarm
+            )
+            logger.info("globalbest: val=%.4f, features=%d", globalbest_val, globalbest_feat_number)
+            if globalbest_val == curr_globalbest:
+                m = 0
+            else:
+                m += 1
+    else:
+        for iteration in range(cfg.max_iterations):
+            logger.info("Iteração PSO: %d/%d", iteration + 1, cfg.max_iterations)
+            swarm = list(Parallel(n_jobs=-1)(delayed(apply_pso)(p) for p in swarm))
+            globalbest, globalbest_val, globalbest_feat_number = find_globalbest(
+                globalbest, globalbest_val, globalbest_feat_number, swarm
+            )
+            logger.info("globalbest: val=%.4f, features=%d", globalbest_val, globalbest_feat_number)
 
     # ------------------------------------------------------------------
     # Extração da solução ótima
